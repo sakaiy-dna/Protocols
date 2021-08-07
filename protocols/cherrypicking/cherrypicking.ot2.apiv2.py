@@ -8,9 +8,9 @@ metadata = {
 
 def run(ctx):
 
-    [pipette_type, pipette_mount, tip_type,
-     tip_reuse, transfer_csv] = get_values(  # noqa: F821
-        "pipette_type", "pipette_mount", "tip_type", "tip_reuse",
+    [left_pipette_type, right_pipette_type, tip_type,
+     tip_reuse, right_pipette_tiprack, transfer_csv] = get_values(  # noqa: F821
+        "left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse", "rigth_pipette_tiprack
         "transfer_csv")
 
     tiprack_map = {
@@ -54,15 +54,24 @@ def run(ctx):
             if not int(slot) in ctx.loaded_labwares:
                 ctx.load_labware(lw.lower(), slot)
 
-    # load tipracks in remaining slots
-    tiprack_type = tiprack_map[pipette_type][tip_type]
-    tipracks = []
+    # load tipracks to slots from backward order for right pipette. Max slot = 11.
+    tiprack_type = tiprack_map[right_pipette_type][tip_type]
+    right_tipracks = []
+    slot_start = 12 - right_pipette_tiprack
+    for slot in range(slot_start, 13):
+        if slot not in ctx.loaded_labwares:
+            right_tipracks.append(ctx.load_labware(tiprack_type, str(slot)))
+                
+    # load tipracks for left pipette in remaining slots
+    tiprack_type = tiprack_map[left_pipette_type][tip_type]
+    left_tipracks = []
     for slot in range(1, 13):
         if slot not in ctx.loaded_labwares:
-            tipracks.append(ctx.load_labware(tiprack_type, str(slot)))
+            left_tipracks.append(ctx.load_labware(tiprack_type, str(slot)))
 
     # load pipette
-    pip = ctx.load_instrument(pipette_type, pipette_mount, tip_racks=tipracks)
+    left_pip = ctx.load_instrument(left_pipette_type, 'left', tip_racks=left_tipracks)
+    right_pip = ctx.load_instrument(right_pipette_type, 'right', tip_racks=right_tipracks)
 
     tip_count = 0
     tip_max = len(tipracks*96)
