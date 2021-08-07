@@ -73,13 +73,17 @@ def run(ctx):
     left_pip = ctx.load_instrument(left_pipette_type, 'left', tip_racks=left_tipracks)
     right_pip = ctx.load_instrument(right_pipette_type, 'right', tip_racks=right_tipracks)
 
-    tip_count = 0
-    tip_max = len(tipracks*96)
+    left_tip_count = 0
+    left_tip_max = len(left_tipracks*96)
+
+    right_tip_count = 0
+    right_tip_max = len(right_tipracks*96)
 
     def pick_up():
         nonlocal tip_count
+        nonlocal tip_count
         if tip_count == tip_max:
-            ctx.pause('Please refill tipracks before resuming.')
+            ctx.pause('Please refill tipracks for left pipette before resuming.')
             pip.reset_tipracks()
             tip_count = 0
         pip.pick_up_tip()
