@@ -44,6 +44,12 @@ def run(ctx):
         }
     }
 
+    # select labware
+    
+    
+    
+    
+    
     # load labware
     transfer_info = [[val.strip().lower() for val in line.split(',')]
                      for line in transfer_csv.splitlines()
