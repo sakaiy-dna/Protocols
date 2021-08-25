@@ -8,9 +8,9 @@ metadata = {
 
 def run(ctx):
 
-    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tiplacks_start, left_tip_last, right_tip_last] = get_values(
+    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tipracks_start, left_tip_last, right_tip_last] = get_values(
         "left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse",
-        "transfer_csv", "right_tiplacks_start","left_tip_last","right_tip_last")
+        "transfer_csv", "right_tipracks_start","left_tip_last","right_tip_last")
 
     tiprack_map = {
         'p10_single': {
@@ -130,12 +130,12 @@ def run(ctx):
     # load tipracks to remaining empty slots. Used tack of each pipette is installed to slot with youngest number
     left_tipracks = []
     right_tipracks = []
-    if not right_tiplacks_start == 1 :
-        for slot in range(1,right_tiplacks_start) :
+    if not right_tipracks_start == 1 :
+        for slot in range(1,right_tipracks_start) :
             if not int(slot) in ctx.loaded_labwares:
                 left_tipracks.append(ctx.load_labware(tiprack_map[left_pipette_type][tip_type], str(slot)))
         left_tipracks = left_tipracks[1:] + left_tipracks[0:1]
-    for slot in range(right_tiplacks_start,12) :
+    for slot in range(right_tipracks_start,12) :
         if not int(slot) in ctx.loaded_labwares:
             right_tipracks.append(ctx.load_labware(tiprack_map[right_pipette_type][tip_type], str(slot)))
     right_tipracks = right_tipracks[1:] + right_tipracks[0:1]
@@ -305,7 +305,7 @@ def run(ctx):
         if right_pipette.hw_pipette['has_tip']:
             right_pipette.drop_tip()
 
-    # Rearrange remaining tips
+    # Rearrange remaining tips to make either A1 or H12 filled.
     if left_used_rack :
         if left_tip_count > 96 - left_tip_last:
             for well_num in range (int(left_tip_last) + 1, 97) :
@@ -315,13 +315,14 @@ def run(ctx):
             for well_num in range (1 , left_tip_count + 1) :
                 left_pipette.pick_up_tip(left_first_tiprack[0][converter96well(left_tip_last - well_num + 1)])
                 left_pipette.drop_tip(left_first_tiprack[0][converter96well(well_num)])
-
+    ctx.pause(right_tip_count)
+    ctx.pause(right_tip_last)
     if right_used_rack :
         if right_tip_count > 96 - right_tip_last:
             for well_num in range (int(right_tip_last) + 1, 97) :
-                right_pipette.pick_up_tip()
+                right_pipette.pick_up_tip(right_first_tiprack[0][converter96well(right_tip_count + 97 - well_num)])
                 right_pipette.drop_tip(right_first_tiprack[0][converter96well(well_num)])
         else :
             for well_num in range (1 , right_tip_count + 1) :
-                right_pipette.pick_up_tip(right_first_tiprack[0][converter96well(right_tip_last - well_num + 1)])
+                right_pipette.pick_up_tip(right_first_tiprack[0][converter96well(int(right_tip_last) - well_num + 1)])
                 right_pipette.drop_tip(right_first_tiprack[0][converter96well(well_num)])
