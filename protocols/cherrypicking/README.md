@@ -16,12 +16,13 @@ Official Cherrypicking protocol is extended to use two different pipettes and us
 Explanation of complex parameters below:
 
 * `input .csv file`: Here, you should upload a .csv file formatted in the [following way](https://opentrons-protocol-library-website.s3.amazonaws.com/custom-README-images/1211/example.csv), making sure to include headers in your csv file. Refer to our [Labware Library](https://labware.opentrons.com/?category=wellPlate) to copy API names for labware to include in the `Source Labware` and `Dest Labware` columns of the .csv.
-* `Pipette Model`: Select which pipette you will use for this protocol.
-* `Pipette Mount`: Specify which mount your single-channel pipette is on (left or right)
+* `Left Pipette Model`: Select which single channel pipette on left mount you will use for this protocol.
+* `Right Pipette Model`: Select which single channel pipette on right mount you will use for this protocol.
 * `Tip Type`: Specify whether you want to use filter tips.
 * `Tip Usage Strategy`: Specify whether you'd like to use a new tip for each transfer, or keep the same tip throughout the protocol.
-
-
+* `Labwares (Slot 1-11)`: Specify labwares (source, destination and tipracks) to load on the slots of the deck.
+* `Left Used Rack`: Specify number of used tips in the left used rack. The used rack is to be loaded on slot with youngest number.
+* `Right Used Rack`: Specify number of used tips in the right used rack. The used rack is to be loaded on slot with youngest number.
 
 ---
 
@@ -42,15 +43,16 @@ Explanation of complex parameters below:
 ---
 
 ### Deck Setup
-* Example deck setup - tip racks loaded onto remining slots.
+* Example deck setup - All labwares including tip racks should be assigned manually.
 ![deck layout](https://opentrons-protocol-library-website.s3.amazonaws.com/custom-README-images/cherrypicking/Screen+Shot+2021-04-29+at+3.10.02+PM.png)
 
 ---
 
 ### Protocol Steps
-1. Pipette will aspirate a user-specified volume at the designated labware and well according to the imported csv file. Slot is also specified, as well as aspiration height from the bottom of the well.
-2. Pipette will dispense this volume into user-specified labware and well according to the imported csv file. Slot is also specified.
-3. Steps 1 and 2 repeated over the duration of the CSV.
+1. Pipette will mix a user-specified volume at the source labware and well according to the imported csv file. Slot is also specified. If no volume is specified step 1 is skipped. "0" exeptionally pauses the robot before following step to enable user mix the source manually.
+2. Pipette will aspirate a user-specified volume at the designated labware and well according to the imported csv file. Slot is also specified, as well as aspiration height from the bottom of the well.
+3. Pipette will dispense this volume into user-specified labware and well according to the imported csv file. Slot is also specified.
+4. Steps 1 and 3 repeated over the duration of the CSV.
 
 ### Process
 1. Input your protocol parameters above.
