@@ -18,11 +18,11 @@ Explanation of complex parameters below:
 * `input .csv file`: Here, you should upload a .csv file formatted in the [following way](https://opentrons-protocol-library-website.s3.amazonaws.com/custom-README-images/1211/example.csv), making sure to include headers in your csv file. Refer to our [Labware Library](https://labware.opentrons.com/?category=wellPlate) to copy API names for labware to include in the `Source Labware` and `Dest Labware` columns of the .csv.
 * `Left Pipette Model`: Select which single channel pipette on left mount you will use for this protocol.
 * `Right Pipette Model`: Select which single channel pipette on right mount you will use for this protocol.
+* `Right Tipracks Start Slot (Slot 1-11)`: Specify starting slot of tipracks for right pipette to set the boarder between two pipettes.
 * `Tip Type`: Specify whether you want to use filter tips.
 * `Tip Usage Strategy`: Specify whether you'd like to use a new tip for each transfer, or keep the same tip throughout the protocol.
-* `Labwares (Slot 1-11)`: Specify labwares (source, destination and tipracks) to load on the slots of the deck.
-* `Left Used Rack`: Specify number of used tips in the left used rack. The used rack is to be loaded on slot with youngest number.
-* `Right Used Rack`: Specify number of used tips in the right used rack. The used rack is to be loaded on slot with youngest number.
+* `Left First Rack`: Specify number of the tips in the first tiprack for the left pipette. The first rack is to be loaded on slot with youngest number.
+* `Right First Rack`: Specify number of the tips in the first tiprack for the right pipette. The first rack is to be loaded on slot with youngest number.
 
 ---
 
