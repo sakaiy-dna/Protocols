@@ -2,15 +2,15 @@ metadata = {
     'protocolName': 'Extended Cherrypicking',
     'author': 'Yusuke Sakai <yusuke.sakai@riken.jp>',
     'source': 'Modified from Opentrons Cherrypicking',
-    'apiLevel': '2.8'
+    'apiLevel': '2.10'
 
 }
 
 def run(ctx):
 
-    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, labware_names, left_tip_last, right_tip_last] = get_values(
+    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tiplacks_start, left_tip_last, right_tip_last] = get_values(
         "left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse",
-        "transfer_csv", "labware_names","left_tip_last","right_tip_last")
+        "transfer_csv", "right_tiplacks_start","left_tip_last","right_tip_last")
 
     tiprack_map = {
         'p10_single': {
@@ -117,32 +117,28 @@ def run(ctx):
     }
 
 
+    # load labware
     transfer_info = [[val.strip().lower() for val in line.split(',')]
                      for line in transfer_csv.splitlines()
                      if line.split(',')[0].strip()][1:]
+    for line in transfer_info:
+        s_lw, s_slot, d_lw, d_slot = line[:2] + line[4:6]
+        for slot, lw in zip([s_slot, d_slot], [s_lw, d_lw]):
+            if not int(slot) in ctx.loaded_labwares:
+                ctx.load_labware(lw.lower(), slot)
 
-
-    # load labware, call the labware by slot_contents[slot_num - 1]
-    slot_num = 1
-    slot_contents = []
-    for installed_labware in labware_names:
-        if not installed_labware == '' :
-            slot_contents.append(ctx.load_labware(installed_labware, slot_num))
-            slot_num += 1
-
-    # load tipracks according to tiprack_map and all_values
+    # load tipracks to remaining empty slots. Used tack of each pipette is installed to slot with youngest number
     left_tipracks = []
     right_tipracks = []
-    if not left_pipette_type == '' :
-        for installed_labware , slot_load in zip(labware_names,slot_contents):
-            if installed_labware == tiprack_map[left_pipette_type][tip_type]:
-                left_tipracks.append(slot_load)
+    if not right_tiplacks_start == 1 :
+        for slot in range(1,right_tiplacks_start) :
+            if not int(slot) in ctx.loaded_labwares:
+                left_tipracks.append(ctx.load_labware(tiprack_map[left_pipette_type][tip_type], str(slot)))
         left_tipracks = left_tipracks[1:] + left_tipracks[0:1]
-    if not right_pipette_type == '' :   
-        for installed_labware , slot_load in zip(labware_names,slot_contents):
-            if installed_labware == tiprack_map[right_pipette_type][tip_type]:
-                right_tipracks.append(slot_load)
-        right_tipracks = right_tipracks[1:] + right_tipracks[0:1]
+    for slot in range(right_tiplacks_start,12) :
+        if not int(slot) in ctx.loaded_labwares:
+            right_tipracks.append(ctx.load_labware(tiprack_map[right_pipette_type][tip_type], str(slot)))
+    right_tipracks = right_tipracks[1:] + right_tipracks[0:1]
 
     # load pipettes
     if not left_pipette_type == "" :
@@ -287,7 +283,7 @@ def run(ctx):
                     pick_up(float(mix))
             else :
                 pick_up(float(mix))
-            selected_pipette.mix(10,float(mix),slot_contents[int(s_slot) - 1][s_well.upper()])
+            selected_pipette.mix(10,float(mix),source)
             selected_pipette.blow_out()
             last_source[current_mount] = source
             if tip_reuse == 'always':
