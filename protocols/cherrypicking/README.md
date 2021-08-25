@@ -1,7 +1,7 @@
 # Cherrypicking
 
 ### Author
-[Opentrons](https://opentrons.com/)
+Yusuke Sakai
 
 ## Categories
 * Featured
@@ -9,7 +9,7 @@
 
 ## Description
 
-Our most robust cherrypicking protocol. Specify aspiration height, labware, pipette, as well as source and destination wells with this all inclusive cherrypicking protocol.
+Official Cherrypicking protocol is extended to use two different pipettes and used racks. Specify aspiration height, labware, pipette, as well as source and destination wells with this all inclusive cherrypicking protocol. You can mix the source before transfering, which allow you to make cascade mixing in single protocol.
 
 ![Cherrypicking Example](https://opentrons-protocol-library-website.s3.amazonaws.com/custom-README-images/cherrypicking/cherrypicking_example.png)
 
