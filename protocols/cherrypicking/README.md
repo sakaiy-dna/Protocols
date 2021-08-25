@@ -9,7 +9,7 @@ Yusuke Sakai
 
 ## Description
 
-Official Cherrypicking protocol is extended to use two different pipettes and used racks. Specify aspiration height, labware, pipette, as well as source and destination wells with this all inclusive cherrypicking protocol. You can mix the source before transfering, which allow you to make cascade mixing in single protocol.
+Official Cherrypicking protocol is extended to use two different pipettes and used tipracks. Specify aspiration height, labware, pipette, as well as source and destination wells with this all inclusive cherrypicking protocol. You can add a mixing step of the source before the transfering, which allows you to make a cascade mixing in a single run.
 
 ![Cherrypicking Example](https://opentrons-protocol-library-website.s3.amazonaws.com/custom-README-images/cherrypicking/cherrypicking_example.png)
 
@@ -21,8 +21,8 @@ Explanation of complex parameters below:
 * `Right Tipracks Start Slot (Slot 1-11)`: Specify starting slot of tipracks for right pipette to set the boarder between two pipettes.
 * `Tip Type`: Specify whether you want to use filter tips.
 * `Tip Usage Strategy`: Specify whether you'd like to use a new tip for each transfer, or keep the same tip throughout the protocol.
-* `Left First Rack`: Specify number of the tips in the first tiprack for the left pipette. The first rack is to be loaded on slot with youngest number.
-* `Right First Rack`: Specify number of the tips in the first tiprack for the right pipette. The first rack is to be loaded on slot with youngest number.
+* `Left Used Rack (1-96)`: Specify number of the tips in the first tiprack for the left pipette. The first rack is to be loaded on slot with youngest number.
+* `Right Used Rack (1-96)`: Specify number of the tips in the first tiprack for the right pipette. The first rack is to be loaded on slot with youngest number.
 
 ---
 
@@ -49,7 +49,7 @@ Explanation of complex parameters below:
 ---
 
 ### Protocol Steps
-1. Pipette will mix a user-specified volume at the source labware and well according to the imported csv file. Slot is also specified. If no volume is specified step 1 is skipped. "0" exeptionally pauses the robot before following step to enable user mix the source manually.
+1. Pipette will mix a user-specified volume at the source labware and well according to the imported csv file. Slot is also specified. If no volume is specified step 1 is skipped. Specifying the mixing volume "0" pauses the robot at this step to enable user mixes the source manually.
 2. Pipette will aspirate a user-specified volume at the designated labware and well according to the imported csv file. Slot is also specified, as well as aspiration height from the bottom of the well.
 3. Pipette will dispense this volume into user-specified labware and well according to the imported csv file. Slot is also specified.
 4. Steps 1 and 3 repeated over the duration of the CSV.
@@ -64,6 +64,7 @@ Explanation of complex parameters below:
 7. Hit 'Run'.
 
 ### Additional Notes
+The used tiprack should be put north-side-south to keep 'A1' filled for calibration. After cherrypicking completes, the robot will rearrange tips on the last tiprack to make either 'A1' or 'H12' filled for your next use.
 If you have any questions about this protocol, please contact the Protocol Development Team by filling out the [Troubleshooting Survey](https://protocol-troubleshooting.paperform.co/).
 
 ###### Internal
