@@ -34,6 +34,12 @@
     ]
   },
   {
+    "type": "int",
+    "label": "Right Tipracks Start Slot (1-11)",
+    "name": "right_tipracks_start",
+    "default": 10
+  },
+  {
     "type": "dropDown",
     "label": "Tip Type",
     "name": "tip_type",
@@ -53,23 +59,15 @@
     ]
   },
   {
-    "type": "dropDown",
-    "label": "Remaining Tip Number in Used Rack (Left Pipette)",
+    "type": "int",
+    "label": "Remaining Tip Number (1-96) in the First Rack (Left Pipette)",
     "name": "left_tip_last",
-    "options": [
-      {"label": "1", "value": 1},
-      {"label": "Reuse tip until the source changes", "value": "once"},
-      {"label": "Reuse tip for each transfer", "value": "never"}
-    ]
+    "default": 96
   },
   {
-    "type": "dropDown",
-    "label": "Tip Usage Strategy",
+    "type": "int",
+    "label": "Remaining Tip Number (1-96) in the First Rack (Right Pipette)",
     "name": "right_tip_last",
-    "options": [
-      {"label": "Use a new tip for each transfer", "value": "always"},
-      {"label": "Reuse tip until the source changes", "value": "once"},
-      {"label": "Reuse tip for each transfer", "value": "never"}
-    ]
+    "default": 96
   }
 ]
