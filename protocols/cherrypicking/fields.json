@@ -48,6 +48,27 @@
     "name": "tip_reuse",
     "options": [
       {"label": "Use a new tip for each transfer", "value": "always"},
+      {"label": "Reuse tip until the source changes", "value": "once"},
+      {"label": "Reuse tip for each transfer", "value": "never"}
+    ]
+  },
+  {
+    "type": "dropDown",
+    "label": "Remaining Tip Number in Used Rack (Left Pipette)",
+    "name": "left_tip_last",
+    "options": [
+      {"label": "1", "value": 1},
+      {"label": "Reuse tip until the source changes", "value": "once"},
+      {"label": "Reuse tip for each transfer", "value": "never"}
+    ]
+  },
+  {
+    "type": "dropDown",
+    "label": "Tip Usage Strategy",
+    "name": "right_tip_last",
+    "options": [
+      {"label": "Use a new tip for each transfer", "value": "always"},
+      {"label": "Reuse tip until the source changes", "value": "once"},
       {"label": "Reuse tip for each transfer", "value": "never"}
     ]
   }
