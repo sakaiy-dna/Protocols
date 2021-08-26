@@ -49,7 +49,7 @@ Explanation of complex parameters below:
 ---
 
 ### Protocol Steps
-1. Pipette will mix a user-specified volume at the source labware and well according to the imported csv file. Slot is also specified. If no volume is specified step 1 is skipped. Specifying the mixing volume "0" pauses the robot at this step to enable user mixes the source manually.
+1. Pipette will mix a user-specified volume at the source labware and well according to the imported csv file. Slot of the labware and the aspirating postion from bottom of the well is also specified. If no volume is specified this step 1 is skipped. Specifying the mixing volume "0" pauses the robot at this step to enable user to mix the source manually.
 2. Pipette will aspirate a user-specified volume at the designated labware and well according to the imported csv file. Slot is also specified, as well as aspiration height from the bottom of the well.
 3. Pipette will dispense this volume into user-specified labware and well according to the imported csv file. Slot is also specified.
 4. Steps 1 and 3 repeated over the duration of the CSV.
