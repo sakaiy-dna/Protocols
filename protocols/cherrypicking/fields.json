@@ -124,6 +124,6 @@
     "type": "textFile",
     "label": "Custom Profile (Last tip wells and start slot of the right tiprack * must be input above. Other parameters are overridden by the profile)",
     "name": "custom_mode_profile",
-    "default": "left_pipette_type:p20_single_gen2\nright_pipette_type:p300_single_gen2\ntip_type:standard\ntip_reuse:once\ninitial_verification:True\nblowout_threshold:50\nmix_after_cycle:1\nmax_carryover:5\nlight_on:run_off\nright_tipracks_start:10"
+    "default": "No Profile"
   }
 ]
