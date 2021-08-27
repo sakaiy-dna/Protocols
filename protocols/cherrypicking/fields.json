@@ -85,8 +85,8 @@
     "label": "Tip Usage Strategy",
     "name": "tip_reuse",
     "options": [
-      {"label": "Use a new tip for each transfer", "value": "always"},
       {"label": "Reuse tip until the tip touches other than source", "value": "once"},
+      {"label": "Use a new tip for each transfer", "value": "always"},
       {"label": "Reuse tip for each transfer", "value": "never"}
     ]
   },
