@@ -294,7 +294,7 @@ def run(ctx):
     last_source = {'left':[],'right':[]}
 
     for line in transfer_info:
-        _, s_slot, s_well, h, _, d_slot, d_well, vol, mix = line[:9]
+        _, s_slot, s_well, h, _, d_slot, d_well, vol, mix, touch_tip = line[:10]
         source = ctx.loaded_labwares[
             int(s_slot)].wells_by_name()[parse_well(s_well)].bottom(float(h))
         source_blow = ctx.loaded_labwares[
@@ -343,13 +343,16 @@ def run(ctx):
         last_source[current_mount] = [s_slot,s_well]    #This variable is to control drop_tip rule in tip_reuse=once case
         if carryover :  # Transfering with carryover won't allow tip to be dipped into destination mixture.
             selected_pipette.transfer(float(vol), source, dest_blow, new_tip='never',blow_out=True,blowout_location='destination well',carryover=bool(allow_carryover))
-            selected_pipette.blow_out(dest_blow)
+            selected_pipette.blow_out(dest_blow)    # blow out twice in case not destination pipetting.
         elif float(vol) < float(blowout_threshold) :     # The threshold should vary depending on solution viscosity etc.
             selected_pipette.transfer(float(vol), source, dest, new_tip='never',blow_out=True,blowout_location='destination well',carryover=bool(allow_carryover),mix_after=(1,max([float(vol),tiplimit_map[pipette_name[current_mount]][tip_type]['min']])))
             last_source[current_mount] = ['tip','dipped']
         else :
             selected_pipette.transfer(float(vol), source, dest_blow, new_tip='never',blow_out=True,blowout_location='destination well',carryover=bool(allow_carryover))
-            selected_pipette.blow_out(dest_blow)
+            selected_pipette.blow_out(dest_blow)    # blow out twice in case not destination pipetting.
+        if bool(touch_tip) :
+            selected_pipette.touch_tip()       # touch_tip if specificed.
+            last_source[current_mount] = ['tip','touched']
 
     if not left_pipette_type == "" :
         if left_pipette.hw_pipette['has_tip']:
