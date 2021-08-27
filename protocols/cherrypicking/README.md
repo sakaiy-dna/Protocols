@@ -19,10 +19,13 @@ Explanation of complex parameters below:
 * `Left Pipette Model`: Select which single channel pipette on left mount you will use for this protocol.
 * `Right Pipette Model`: Select which single channel pipette on right mount you will use for this protocol.
 * `Right Tipracks Start Slot (Slot 1-11)`: Specify starting slot of tipracks for right pipette to set the boarder between two pipettes.
-* `Tip Type`: Specify whether you want to use filter tips.
+* `Left First Rack (1-96)`: Specify number of the tips in the first tiprack for the left pipette. The first rack is to be loaded on slot with youngest number.
+* `Right First Rack (1-96)`: Specify number of the tips in the first tiprack for the right pipette. The first rack is to be loaded on slot with youngest number.
+* `Mode`: Specify pipetting strategy preset, or select custom for detail specification.
+* `Tip Type`: Specify whether you want to use filter tips. Mode overide this variable.
+* `Initial Verification`: Specify if you run initial verification step before main protocol. This verify calibration of installed pipette(s) and the right first tiprack slot (if used).
+* `Blow out threshold (default = 50)`: Specify the threshold in µL to blow out (higher) or pipetting (lower) at destination well.
 * `Tip Usage Strategy`: Specify whether you'd like to use a new tip for each transfer, or keep the same tip throughout the protocol.
-* `Left Used Rack (1-96)`: Specify number of the tips in the first tiprack for the left pipette. The first rack is to be loaded on slot with youngest number.
-* `Right Used Rack (1-96)`: Specify number of the tips in the first tiprack for the right pipette. The first rack is to be loaded on slot with youngest number.
 
 ---
 
