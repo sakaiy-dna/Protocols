@@ -52,13 +52,13 @@
   {
     "type": "str",
     "label": "The well of the last tip in the First Rack (Left Pipette)*",
-    "name": "left_tip_last",
+    "name": "left_tip_last_well",
     "default": "H12"
   },
   {
     "type": "str",
     "label": "The well of the last tip in the First Rack (Right Pipette)*",
-    "name": "right_tip_last",
+    "name": "right_tip_last_well",
     "default": "H12"
   },
   {
