@@ -8,10 +8,10 @@ metadata = {
 
 def run(ctx):
     import math
-    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tipracks_start, left_tip_last_well, right_tip_last_well, mode, initial_verification, blowout_threshold, max_carryover, light_on, mix_after_cycle] = get_values(
+    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tipracks_start, left_tip_last_well, right_tip_last_well, mode, initial_verification, blowout_threshold, max_carryover, light_on, mix_after_cycle, profile] = get_values(
         "left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse",
-        "transfer_csv", "right_tipracks_start","left_tip_last_well","right_tip_last_well","mode", "initial_verification", "blowout_threshold", "max_carryover", "light_on", "mix_after_cycle")
-
+        "transfer_csv", "right_tipracks_start","left_tip_last_well","right_tip_last_well","mode", "initial_verification", "blowout_threshold", "max_carryover", "light_on", "mix_after_cycle", "profile")
+    
     # Mode overrides custom variables for pipetting rule, unless the mode is 'custom_mode'
     if mode == 'safe_mode' :
         tip_reuse = 'always'
@@ -26,6 +26,13 @@ def run(ctx):
         allow_carryover = 'True'
         mix_after_cycle = 1
 
+    # Profile overides mode and other parameters apart from right/left last_tip_well and right tipracks start
+    if not profile == 'No Profile' :
+        profile_dict = {}
+        for line in profile.splitlines() :
+            profile_dict[line.split(':')[0]] = line.split(':')[1]
+        left_pipette_type, right_pipette_type, tip_type, tip_reuse, initial_verification, blowout_threshold, max_carryover, light_on, mix_after_cycle = [
+        profile_dict['left_pipette_type'], profile_dict['right_pipette_type'], profile_dict['tip_type'], profile_dict['tip_reuse'], profile_dict['initial_verification'], int(profile_dict['blowout_threshold']), int(profile_dict['max_carryover']), profile_dict['light_on'], int(profile_dict['mix_after_cycle'])]
 
     light_map = {       # During initialization, during run, during pause, after run
         'always_on':(True,True,True,True),
