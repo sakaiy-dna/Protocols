@@ -12,7 +12,7 @@ def run(ctx):
         "left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse",
         "transfer_csv", "right_tipracks_start","left_tip_last_well","right_tip_last_well","mode", "initial_verification", "blowout_threshold", "max_carryover", "light_on", "mix_after_cycle")
 
-    # Mode override custom variables for pipetting rule, unless the mode is 'custom_mode'
+    # Mode overrides custom variables for pipetting rule, unless the mode is 'custom_mode'
     if mode == 'safe_mode' :
         tip_reuse = 'always'
         initial_verification = 'True'
