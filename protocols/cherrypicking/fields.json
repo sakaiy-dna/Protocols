@@ -49,20 +49,20 @@
     ]
   },
   {
-    "type": "int",
-    "label": "Remaining Tip Number (1-96) in the First Rack (Left Pipette)",
+    "type": "str",
+    "label": "The well of the last tip in the First Rack (Left Pipette)",
     "name": "left_tip_last",
-    "default": 96
+    "default": "H12"
   },
   {
-    "type": "int",
-    "label": "Remaining Tip Number (1-96) in the First Rack (Right Pipette)",
+    "type": "str",
+    "label": "The well of the last tip in the First Rack (Right Pipette)",
     "name": "right_tip_last",
-    "default": 96
+    "default": "H12"
   },
   {
     "type": "dropDown",
-    "label": "Mode",
+    "label": "Mode (override following options by preset)",
     "name": "mode",
     "options": [
       {"label": "Simple Mode", "value": "simple_mode"},
@@ -72,21 +72,21 @@
   },
   {
     "type": "dropDown",
-    "label": "Tip Usage Strategy",
-    "name": "tip_reuse",
-    "options": [
-      {"label": "Use a new tip for each transfer", "value": "always"},
-      {"label": "Reuse tip until the source changes", "value": "once"},
-      {"label": "Reuse tip for each transfer", "value": "never"}
-    ]
-  },
-  {
-    "type": "dropDown",
-    "label": "Initial Verification of Tipracks",
+    "label": "Initial verification of tipracks to minimize human error.",
     "name": "initial_verification",
     "options": [
       {"label": "Yes", "value": "True"},
       {"label": "No", "value": "False"}
+    ]
+  },
+  {
+    "type": "dropDown",
+    "label": "Tip Usage Strategy",
+    "name": "tip_reuse",
+    "options": [
+      {"label": "Use a new tip for each transfer", "value": "always"},
+      {"label": "Reuse tip until the tip touches other than source", "value": "once"},
+      {"label": "Reuse tip for each transfer", "value": "never"}
     ]
   },
   {
@@ -96,12 +96,27 @@
     "default": 50
   },
   {
+    "type": "ini",
+    "label": "Maximum carryover cycles when the transfering volume is higher than the pipette capacity.",
+    "name": "max_carryover",
+    "default": 5
+  },
+  {
+    "type": "ini",
+    "label": "Pipetting cycle when the transfering volume is lower than blow out threshold.",
+    "name": "mix_after_cycle",
+    "default": 1
+  },
+  {
     "type": "dropDown",
-    "label": "If carryover when the transfering volume is higher than pipette capacity.",
-    "name": "initial_verification",
+    "label": "Crane Rail Light Setting",
+    "name": "light_on",
     "options": [
-      {"label": "Allow carrryover", "value": "True"},
-      {"label": "Never carryover", "value": "False"}
+      {"label": "Light ON during manual process", "run_off"},
+      {"label": "Light ON during initial verification phase", "start_only"},
+      {"label": "Light ON during initial verification and after complete", "start_end"},
+      {"label": "Always light ON", "always_on"},
+      {"label": "Always light OFF", "always_off"}
     ]
-  }
+  },
 ]
