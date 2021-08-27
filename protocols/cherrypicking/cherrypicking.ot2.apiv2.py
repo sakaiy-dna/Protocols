@@ -8,9 +8,21 @@ metadata = {
 
 def run(ctx):
 
-    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tipracks_start, left_tip_last, right_tip_last] = get_values(
+    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tipracks_start, left_tip_last, right_tip_last, mode, initial_verification, blowout_threshold, allow_carryover] = get_values(
         "left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse",
-        "transfer_csv", "right_tipracks_start","left_tip_last","right_tip_last")
+        "transfer_csv", "right_tipracks_start","left_tip_last","right_tip_last","mode", "initial_verification", "blowout_threshold", "allow_carryover")
+
+    # Mode override custom variables for pipetting rule, unless the mode is 'custom_mode'
+    if mode == 'safe_mode' :
+        tip_reuse = 'always'
+        initial_verification = 'True'
+        blowout_threshold = 1000    # A cycle of pipetting is always performed in destination well
+        allow_carryover = 'False'
+    elif mode == 'simple_mode' :
+        tip_reuse = 'once'
+        initial_verification = 'False'
+        blowout_threshold = 50     # Transfering 50 µL or less than 50 µL will be performed with a pipetting in destination well
+        allow_carryover = 'True'
 
     tiprack_map = {
         'p10_single': {
@@ -141,10 +153,13 @@ def run(ctx):
     right_tipracks = right_tipracks[1:] + right_tipracks[0:1]
 
     # load pipettes
+    pipette_name = {}
     if not left_pipette_type == "" :
         left_pipette = ctx.load_instrument(left_pipette_type, 'left', tip_racks=left_tipracks)
+        pipette_name['left'] = left_pipette_type
     if not right_pipette_type == "" : 
         right_pipette = ctx.load_instrument(right_pipette_type, 'right', tip_racks=right_tipracks)
+        pipette_name['right'] = right_pipette_type        
 
     def converter96well(number):
         column_number = (number - 1) // 8 + 1
@@ -153,9 +168,11 @@ def run(ctx):
         well_position = row_letter + str(column_number)
         return well_position
 
+    carryover = False
     current_mount = ''
     def pipette (volume):
-        nonlocal current_mount
+        nonlocal current_mount, carryover
+        carryover = False
         # In case only one pipette was installed.
         if left_pipette_type == '' :
             current_mount = 'right'
@@ -172,10 +189,14 @@ def run(ctx):
             elif volume < tiplimit_map[right_pipette_type][tip_type]['min'] :
                 current_mount = 'left'
                 return left_pipette
+                carryover = True
+            elif volume <= tiplimit_map[right_pipette_type][tip_type]['max'] :
+                current_mount = 'right'
+                return right_pipette
             else :
                 current_mount = 'right'
                 return right_pipette
-
+                carryover = True
         # In case left pipette is larger
         else :
             if volume <= tiplimit_map[right_pipette_type][tip_type]['max'] :
@@ -184,9 +205,14 @@ def run(ctx):
             elif volume < tiplimit_map[left_pipette_type][tip_type]['min'] :
                 current_mount = 'right'
                 return right_pipette
+                carryover = True
+            elif volume <= tiplimit_map[left_pipette_type][tip_type]['max'] :
+                current_mount = 'left'
+                return left_pipette
             else :
                 current_mount = 'left'
                 return left_pipette
+                carryover = True
 
     left_tip_count = 0
     right_tip_count = 0
@@ -215,8 +241,7 @@ def run(ctx):
             if left_tip_count == left_tip_max :
                 ctx.pause('Please refill tipracks for the left pipette before resuming.')
                 selected_pipette.reset_tipracks()
-                left_tip_count = 0
-                left_tip_count += 1
+                left_tip_count = 1
                 selected_pipette.pick_up_tip()
             # In case the used rack gets empty
             elif ( left_tip_count  < left_tip_last ) and left_used_rack :
@@ -256,48 +281,76 @@ def run(ctx):
         number = well[1:]
         return letter.upper() + str(int(number))
 
+    # Test tiprack calibrations of both pipette (to avoid gantry crane error)
+    if bool(initial_verification) :
+        if not left_pipette_type == '' :
+            left_pipette.pick_up_tip(left_first_tiprack[0]['A1'])
+            left_pipette.return_tip()
+        if not right_pipette_type == '' :
+            right_pipette.pick_up_tip(right_first_tiprack[0]['A1'])
+            right_pipette.return_tip()
+        ctx.pause('Resume OT-2 protocol once you confirm optimal calibration and the tips are picked up from the first rack(s) of individual pipette(s)')
+
     last_source = {'left':[],'right':[]}
 
-    if tip_reuse == 'never':
-        vol = int(transfer_info[0][7])
-        selected_pipette = pipette (vol)
-        pick_up(vol)
     for line in transfer_info:
         _, s_slot, s_well, h, _, d_slot, d_well, vol, mix = line[:9]
         source = ctx.loaded_labwares[
             int(s_slot)].wells_by_name()[parse_well(s_well)].bottom(float(h))
+        source_blow = ctx.loaded_labwares[
+            int(s_slot)].wells_by_name()[parse_well(s_well)].top(-5)
         dest = ctx.loaded_labwares[
-            int(d_slot)].wells_by_name()[parse_well(d_well)]
+                    int(d_slot)].wells_by_name()[parse_well(d_well)]
+        dest_blow = ctx.loaded_labwares[
+                int(d_slot)].wells_by_name()[parse_well(d_well)].top(-5)
+        mix_cycle = 10
 
         # Mix source solution before transfering
         if mix == '0' :  #In case of 0, pause and manual mixing will be added.
             ctx.pause('Please mix destination tubes manually, spin them down, and resume the robot.')
         elif not mix == '' :
             selected_pipette = pipette (float(mix))
+            mix_cycle = max(10, 10*round(float(mix)/tiplimit_map[pipette_name[current_mount]][tip_type]['max']))
+            mix_volume = min(float(mix),tiplimit_map[pipette_name[current_mount]][tip_type]['max'])
             if selected_pipette.hw_pipette['has_tip']:
                 if tip_reuse == 'always' :
                     selected_pipette.drop_tip()
                     pick_up(float(mix))
-                elif tip_reuse == 'once' and not last_source[current_mount] == source : # Need to be tested.
+                elif tip_reuse == 'once' and not last_source[current_mount] == [s_slot,s_well] :
                     selected_pipette.drop_tip()
-                    pick_up(float(mix))
+                    pick_up(mix_volume)
             else :
                 pick_up(float(mix))
-            selected_pipette.mix(10,float(mix),source)
-            selected_pipette.blow_out()
-            last_source[current_mount] = source
-            if tip_reuse == 'always':
-                selected_pipette.drop_tip()
+            selected_pipette.mix(mix_cycle,mix_volume,source)
+            selected_pipette.blow_out(source_blow)
+            last_source[current_mount] = [s_slot,s_well]
+
         # Main Transfer step
-        selected_pipette = pipette (int(vol))
-        if tip_reuse == 'once' and not last_source[current_mount] == source and selected_pipette.hw_pipette['has_tip']: # Need to be tested.
-            selected_pipette.drop_tip()
-        if not selected_pipette.hw_pipette['has_tip']:
-            pick_up(int(vol))
-        selected_pipette.transfer(float(vol), source, dest, new_tip='never',blow_out=True,blowout_location='destination well')
-        last_source[current_mount] = source
-        if tip_reuse == 'always':
-            selected_pipette.drop_tip()
+        selected_pipette = pipette (float(vol))
+
+        if selected_pipette.hw_pipette['has_tip']:
+            if tip_reuse == 'always' :
+                selected_pipette.drop_tip()
+                pick_up(float(vol))
+            elif tip_reuse == 'once' and not last_source[current_mount] == [s_slot,s_well] :
+                selected_pipette.drop_tip()
+                pick_up(float(vol))
+            else :
+                selected_pipette.blow_out(ctx.fixed_trash['A1'])
+        else :
+            pick_up(float(vol))
+            
+        last_source[current_mount] = [s_slot,s_well]    #This variable is to control drop_tip rule in tip_reuse=once case
+        if carryover :  # Transfering with carryover won't allow tip to be dipped into destination mixture.
+            selected_pipette.transfer(float(vol), source, dest_blow, new_tip='never',blow_out=True,blowout_location='destination well',carryover=bool(allow_carryover))
+            selected_pipette.blow_out(dest_blow)
+        elif float(vol) < float(blowout_threshold) :     # The threshold should vary depending on solution viscosity etc.
+            selected_pipette.transfer(float(vol), source, dest, new_tip='never',blow_out=True,blowout_location='destination well',carryover=bool(allow_carryover),mix_after=(1,max([float(vol),tiplimit_map[pipette_name[current_mount]][tip_type]['min']])))
+            last_source[current_mount] = ['tip','dipped']
+        else :
+            selected_pipette.transfer(float(vol), source, dest_blow, new_tip='never',blow_out=True,blowout_location='destination well',carryover=bool(allow_carryover))
+            selected_pipette.blow_out(dest_blow)
+
     if not left_pipette_type == "" :
         if left_pipette.hw_pipette['has_tip']:
             left_pipette.drop_tip()
@@ -305,18 +358,16 @@ def run(ctx):
         if right_pipette.hw_pipette['has_tip']:
             right_pipette.drop_tip()
 
-    # Rearrange remaining tips to make either A1 or H12 filled.
+    # Rearrange remaining tips in the first tipracks
     if left_used_rack :
         if left_tip_count > 96 - left_tip_last:
             for well_num in range (int(left_tip_last) + 1, 97) :
-                left_pipette.pick_up_tip()
+                left_pipette.pick_up_tip(left_first_tiprack[0][converter96well(left_tip_count + 97 - well_num)])
                 left_pipette.drop_tip(left_first_tiprack[0][converter96well(well_num)])
         else :
             for well_num in range (1 , left_tip_count + 1) :
                 left_pipette.pick_up_tip(left_first_tiprack[0][converter96well(left_tip_last - well_num + 1)])
                 left_pipette.drop_tip(left_first_tiprack[0][converter96well(well_num)])
-    ctx.pause(right_tip_count)
-    ctx.pause(right_tip_last)
     if right_used_rack :
         if right_tip_count > 96 - right_tip_last:
             for well_num in range (int(right_tip_last) + 1, 97) :
@@ -324,5 +375,5 @@ def run(ctx):
                 right_pipette.drop_tip(right_first_tiprack[0][converter96well(well_num)])
         else :
             for well_num in range (1 , right_tip_count + 1) :
-                right_pipette.pick_up_tip(right_first_tiprack[0][converter96well(int(right_tip_last) - well_num + 1)])
+                right_pipette.pick_up_tip(right_first_tiprack[0][converter96well(right_tip_last - well_num + 1)])
                 right_pipette.drop_tip(right_first_tiprack[0][converter96well(well_num)])
