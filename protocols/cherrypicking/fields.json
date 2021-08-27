@@ -119,4 +119,10 @@
       {"label": "Always light OFF", "always_off"}
     ]
   },
+  {
+    "type": "textFile",
+    "label": "Custom Profile ()",
+    "name": "custom_mode_profile",
+    "default": "tip_reuse = \"once\"\ninitial_verification = \"False\"\nblowout_threshold = 50\nmax_carryover = 'True'\nmix_after_cycle = 1\light_on = 'run_off'
+  }
 ]
