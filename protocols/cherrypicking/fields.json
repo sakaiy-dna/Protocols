@@ -3,7 +3,7 @@
     "type": "textFile",
     "label": "Transfer .csv File",
     "name": "transfer_csv",
-    "default": "Source Labware,Source Slot,Source Well,Source Aspiration Height Above Bottom (in mm),Dest Labware,Dest Slot,Dest Well,Volume (in ul)\nagilent_1_reservoir_290ml,1,A1,1,nest_96_wellplate_100ul_pcr_full_skirt,4,A11,1\nnest_12_reservoir_15ml,2,A1,1,nest_96_wellplate_2ml_deep,5,A5,3\nnest_1_reservoir_195ml,3,A1,1,nest_96_wellplate_2ml_deep,5,H12,7"
+    "default": "Source Labware,Source Slot,Source Well,Source Aspiration Height Above Bottom (in mm),Dest Labware,Dest Slot,Dest Well,Volume (in ul),Mixing Volume Before Aspirate (in ul or [blank] to skip or 0 to pause for manual mixing),Touch tip option (Before/After/Both/[blank]),touch tip distance from top of the well (in mm default=5 mm)\nagilent_1_reservoir_290ml,1,A1,1,nest_96_wellplate_100ul_pcr_full_skirt,4,A11,1\nnest_12_reservoir_15ml,2,A1,1,nest_96_wellplate_2ml_deep,5,A5,3,,,\nnest_1_reservoir_195ml,3,A1,1,nest_96_wellplate_2ml_deep,5,H12,7,,,"
   },
   {
     "type": "dropDown",
@@ -24,6 +24,7 @@
     "label": "Right Pipette Model",
     "name": "right_pipette_type",
     "options": [
+      {"label": "Empty", "value": ""},
       {"label": "P10 Single (GEN 1)", "value": "p10_single"},
       {"label": "P50 Single (GEN 1)", "value": "p50_single"},
       {"label": "P300 Single (GEN 1)", "value": "p300_single"},
@@ -50,13 +51,13 @@
   },
   {
     "type": "str",
-    "label": "The well of the last tip in the First Rack (Left Pipette)",
+    "label": "The well of the last tip in the First Rack (Left Pipette)*",
     "name": "left_tip_last",
     "default": "H12"
   },
   {
     "type": "str",
-    "label": "The well of the last tip in the First Rack (Right Pipette)",
+    "label": "The well of the last tip in the First Rack (Right Pipette)*",
     "name": "right_tip_last",
     "default": "H12"
   },
@@ -121,8 +122,8 @@
   },
   {
     "type": "textFile",
-    "label": "Custom Profile ()",
+    "label": "Custom Profile (Last tip wells* must be input above. Other parameters are overridden by the profile)",
     "name": "custom_mode_profile",
-    "default": "tip_reuse = \"once\"\ninitial_verification = \"False\"\nblowout_threshold = 50\nmax_carryover = 'True'\nmix_after_cycle = 1\light_on = 'run_off'
+    "default": "left_pipette_type:p20_single_gen2\nright_pipette_type:p300_single_gen2\ntip_type:standard\ntip_reuse:once\ninitial_verification:True\nblowout_threshold:50\nmix_after_cycle:1\nmax_carryover:5\nlight_on:run_off\nright_tipracks_start:10"
   }
 ]
