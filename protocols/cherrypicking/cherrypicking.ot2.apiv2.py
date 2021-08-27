@@ -16,7 +16,7 @@ def run(ctx):
     if mode == 'safe_mode' :
         tip_reuse = 'always'
         initial_verification = 'True'
-        blowout_threshold = 1000    # One cycle of pipetting is always performed in destination well
+        blowout_threshold = 1000    # Twice of pipetting is always performed in destination well
         allow_carryover = 'False'
         mix_after_cycle = 2
     elif mode == 'simple_mode' :
@@ -25,6 +25,15 @@ def run(ctx):
         blowout_threshold = 50     # Transfering 50 µL or less than 50 µL will be performed with a pipetting in destination well
         allow_carryover = 'True'
         mix_after_cycle = 1
+
+
+    light_map = {       # During initialization, during run, during pause, after run
+        'always_on':(True,True,True,True),
+        'start_end':(True,False,False,True),
+        'start_only':(True,False,False,False),
+        'run_off':(True,False,True,True),
+        'always_off':(False,False,False,False)
+    }
 
     tiprack_map = {
         'p10_single': {
@@ -336,20 +345,20 @@ def run(ctx):
 
     # Test tiprack calibrations of both pipette (to avoid a rare gantry crane error and to confirm the position of the first tiprack for right pipette).
     if bool(initial_verification) :
-        if bool(light_on) :
-            ctx.set_rail_lights(True)
+        ctx.set_rail_lights(light_map[light_on][0])
         if not left_pipette_type == '' :
             left_pipette.pick_up_tip(left_first_tiprack[0]['A1'])
             left_pipette.return_tip()
         if not right_pipette_type == '' :
             right_pipette.pick_up_tip(right_first_tiprack[0]['A1'])
             right_pipette.return_tip()
+        ctx.set_rail_lights(light_map[light_on][2])
         ctx.pause('Resume OT-2 protocol once you confirm optimal calibration and the tips are picked up from the first rack(s) of individual pipette(s)')
-        ctx.set_rail_lights(False)
 
     last_source = {'left':[],'right':[]}
     dest_history = []
 
+    ctx.set_rail_lights(light_map[light_on][1])
     for line in transfer_info:
         _, s_slot, s_well, h, _, d_slot, d_well, vol, mix, touchtip, touchtip_d = line[:11]
         source = ctx.loaded_labwares[
@@ -360,7 +369,9 @@ def run(ctx):
 
         # Mix source solution before transfering
         if mix == '0' :  #In case of 0, pause and manual mixing will be added.
+            ctx.set_rail_lights(light_map[light_on][2])
             ctx.pause('Please mix destination tubes manually, spin them down, and resume the robot.')
+            ctx.set_rail_lights(light_map[light_on][1])
         elif not mix == '' :
             selected_pipette = pipette (float(mix))
             mix_cycle = max(10, 10*round(float(mix)/tiplimit_map[pipette_name[current_mount]][tip_type]['max']))
@@ -435,5 +446,4 @@ def run(ctx):
             for well_num in range (1 , right_tip_count + 1) :
                 right_pipette.pick_up_tip(right_first_tiprack[0][converter96well(right_tip_last - well_num + 1)])
                 right_pipette.drop_tip(right_first_tiprack[0][converter96well(well_num)])
-    if bool(light_on) :
-        ctx.set_rail_lights(True)
+    ctx.set_rail_lights(light_map[light_on][3])
