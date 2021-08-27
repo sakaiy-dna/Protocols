@@ -19,19 +19,24 @@ Explanation of complex parameters below:
 * `Left Pipette Model`: Select which single channel pipette on left mount you will use for this protocol.
 * `Right Pipette Model`: Select which single channel pipette on right mount you will use for this protocol.
 * `Right Tipracks Start Slot (Slot 1-11)`: Specify starting slot of tipracks for right pipette to set the boarder between two pipettes.
-* `Left First Rack (1-96)`: Specify number of the tips in the first tiprack for the left pipette. The first rack is to be loaded on slot with youngest number.
-* `Right First Rack (1-96)`: Specify number of the tips in the first tiprack for the right pipette. The first rack is to be loaded on slot with youngest number.
-* `Mode`: Specify pipetting strategy preset, or select custom for detail specification.
-* `Tip Type`: Specify whether you want to use filter tips. Mode overide this variable.
-* `Initial Verification`: Specify if you run initial verification step before main protocol. This verify calibration of installed pipette(s) and the right first tiprack slot (if used).
-* `Blow out threshold (default = 50)`: Specify the threshold in µL to blow out (higher) or pipetting (lower) at destination well.
-* `Tip Usage Strategy`: Specify whether you'd like to use a new tip for each transfer, or keep the same tip throughout the protocol.
+* `Left First Rack Well`: Specify number of the tips in the first tiprack for the left pipette. The first rack is to be loaded on slot with youngest number.
+* `Right First Rack Well`: Specify number of the tips in the first tiprack for the right pipette. The first rack is to be loaded on slot with youngest number.
+* `Mode`: Specify preset of following advanced parameters, or select custom to specify details below.
+* `Tip Usage Strategy (default = Always)`: Specify whether you'd like to use a new tip for each transfer, or keep the same tip throughout the protocol. Mode overides this parameter.
+* `Blow out threshold (default = 50)`: Specify the threshold in µL to blow out (higher) or pipetting (lower) at destination well. Mode overides this parameter.
+* `Destination Pipetting Cycle (default = 1)`: Specify the cycle of pipetting in the destination well when the transfering volume is below blow out threshold. Mode overides this parameter.
+* `Light Setting (default = Light On During Manual Process)`: Specify how you want to light deck. Mode overides this parameter.
+* `Tip Type`: Specify whether you want to use filter tips. Mode overides this parameter.
+* `Initial Verification (default = Yes)`: Specify if you run initial verification step before main protocol. This verify the last tip well parameters of installed pipette(s) and the right first tiprack slot (if used). Mode overides this parameter.
+* `Profile (Text file)`: Here, you may upload profile text file to apply your custom parameters above, apart from right tipracks start slot, left first rack well, and right first rack well, those have to be specified everytime.
 
 ---
 
 
 ### Labware
 * Any verified labware found in our [Labware Library](https://labware.opentrons.com/?category=wellPlate)
+* You may use custom labwares by adding them to Opentrons.app. 
+* If you use third-party tipracks, make sure to modify the tiprack map and tiplimit_map in the output protocol file correctly.
 
 ### Pipettes
 * [P20 Single GEN2 Pipette](https://opentrons.com/pipettes/)
@@ -46,16 +51,20 @@ Explanation of complex parameters below:
 ---
 
 ### Deck Setup
-* Example deck setup - All labwares including tip racks should be assigned manually.
+* Example deck setup - Source and destination labwares are assined automatically according to CSV file. The tipracks for left pipette fills remaining slot from youngest slot number. The tipracks for right pipette is loaded from manually specified slot.
 ![deck layout](https://opentrons-protocol-library-website.s3.amazonaws.com/custom-README-images/cherrypicking/Screen+Shot+2021-04-29+at+3.10.02+PM.png)
 
 ---
 
 ### Protocol Steps
-1. Pipette will mix a user-specified volume at the source labware and well according to the imported csv file. Slot of the labware and the aspirating postion from bottom of the well is also specified. If no volume is specified this step 1 is skipped. Specifying the mixing volume "0" pauses the robot at this step to enable user to mix the source manually.
-2. Pipette will aspirate a user-specified volume at the designated labware and well according to the imported csv file. Slot is also specified, as well as aspiration height from the bottom of the well.
-3. Pipette will dispense this volume into user-specified labware and well according to the imported csv file. Slot is also specified.
-4. Steps 1 and 3 repeated over the duration of the CSV.
+1. Optional verification step picks up the LAST tip(s) from the FIRST tiprack(s) by installed pipette(s) to double-check the user input correct parameter and installed labwares to deck appropriately.
+2. Pipette will mix a user-specified volume for 10 times at the source labware and well according to the imported csv file. Slot of the labware and the aspirating postion from bottom of the well is also specified. If no volume is specified this step 1 is skipped. Specifying the mixing volume "0" pauses the robot at this step to enable user to mix the source manually. If the mixing volume exceeded the largest installed pipette capacity, the mixing cycle is increased to get an equivalent circulation. 
+3. Pipette will aspirate a user-specified volume at the designated labware and well according to the imported csv file. Slot, aspiration height from the bottom of the well are also specified. If the volume exceeds pipette capacity and user allows carryover, transfering volume is split into smaller volume.
+4. Optionally, pipette will perform "touch tip" at the user-specified place in the source well to remove external droplet on tip.
+5. Pipette will dispense the content into user-specified labware and well according to the imported csv file. Slot is also specified. Here, user can specify threshold to designate if the remainign liquid is blown out above or pipetted user-specified times in destination well. 
+6. Optionally, pipette will perform "touch tip" at the user-specified place in the destination well to remove external droplet on tip.
+7. If the user-specified transfering volume exceeds pipette capacity and user allows carryover, repeat steps 3-6 to complete transfer.
+8. Steps 2 and 7 are repeated over the duration of the CSV.
 
 ### Process
 1. Input your protocol parameters above.
@@ -68,6 +77,7 @@ Explanation of complex parameters below:
 
 ### Additional Notes
 The used tiprack should be put north-side-south to keep 'A1' filled for calibration. After cherrypicking completes, the robot will rearrange tips on the last tiprack to make either 'A1' or 'H12' filled for your next use.  
+Monitoring the robot behavior during initial verification phase is highly recommended to minimize human error of setup.
 If you have any questions about this protocol, please contact the Protocol Development Team by filling out the [Troubleshooting Survey](https://protocol-troubleshooting.paperform.co/).
 
 ###### Internal
