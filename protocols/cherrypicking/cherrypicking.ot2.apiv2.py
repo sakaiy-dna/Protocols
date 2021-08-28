@@ -8,21 +8,23 @@ metadata = {
 
 def run(ctx):
     import math
-    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tipracks_start, left_tip_last_well, right_tip_last_well, mode, initial_verification, blowout_threshold, max_carryover, light_on, mix_after_cycle, profile] = get_values(
+    [left_pipette_type, right_pipette_type, tip_type, tip_reuse, transfer_csv, right_tipracks_start, left_tip_last_well, right_tip_last_well, mode, initial_verification, blowout_threshold, blowout_cycle, max_carryover, light_on, mix_after_cycle, profile] = get_values(
         "left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse",
-        "transfer_csv", "right_tipracks_start","left_tip_last_well","right_tip_last_well","mode", "initial_verification", "blowout_threshold", "max_carryover", "light_on", "mix_after_cycle", "profile")
+        "transfer_csv", "right_tipracks_start","left_tip_last_well","right_tip_last_well","mode", "initial_verification", "blowout_threshold", "blowout_cycle", "max_carryover", "light_on", "mix_after_cycle", "profile")
     
     # Mode overrides custom variables for pipetting rule, unless the mode is 'custom_mode'
     if mode == 'safe_mode' :
         tip_reuse = 'always'
         initial_verification = 'True'
         blowout_threshold = 1000    # Twice of pipetting is always performed in destination well
+        blowout_cycle = 2
         allow_carryover = 'False'
         mix_after_cycle = 2
     elif mode == 'simple_mode' :
         tip_reuse = 'once'
         initial_verification = 'False'
         blowout_threshold = 50     # Transfering 50 µL or less than 50 µL will be performed with a pipetting in destination well
+        blowout_cycle = 2
         allow_carryover = 'True'
         mix_after_cycle = 1
 
@@ -313,8 +315,7 @@ def run(ctx):
             if ( right_tip_count == right_tip_last ) and right_used_rack :
                 right_used_rack = False  # Secound round ignores last-tip fork for used rack.
 
-
-    def transfer(pipette,vol,source,dest,source_height,*,blow_out=False,max_carryover=5,mix_after=None,touchtip='',touchtip_d='',tip_replace=True) :
+    def transfer(pipette,vol,source,dest,source_height,*,blow_out=False,max_carryover=5,mix_after=None,touchtip='',touchtip_d='',tip_replace=True, blowout_cycle=2) :
         # carryover assignment. mix_after is a tapple (mix cycle, mix volume). tip_replace specify if tip will be replaced during carryover.
         transfer_volume = [float(vol)]
         transfer_cycle = 1
@@ -336,8 +337,8 @@ def run(ctx):
                 pipette.touch_tip(location=source_well,v_offset=(-1*int(touchtip_d)))
             if bool(blow_out):
                 pipette.dispense(volume=unit_vol,location=dest.top(-5))
-                pipette.blow_out(location=dest.top(-5))
-                pipette.blow_out(location=dest.top(-5))    #Blow out twice as official blow_out setting is too weak. Blow out is executed every transfering during carryover to avoid accumulating remainig liquid.
+                for i in range (blowout_cycle) :
+                    pipette.blow_out(location=dest.top(-5))    #Blow out user specified times (default = 2) as official blow_out setting is too weak. Blow out is executed every transfering during carryover to avoid accumulating remainig liquid.
             else:
                 pipette.dispense(volume=unit_vol,location=dest)
                 tip_dirty = True
@@ -393,7 +394,8 @@ def run(ctx):
             else :
                 pick_up(float(mix))
             selected_pipette.mix(mix_cycle,mix_volume,source.bottom(float(h)))
-            selected_pipette.blow_out(source.top(-5))
+            for i in range (int(blowout_cycle))
+                selected_pipette.blow_out(source.top(-5))
             last_source[current_mount] = [s_slot,s_well]
 
         # Main Transfer step
@@ -416,13 +418,13 @@ def run(ctx):
             if float(vol) < float(blowout_threshold) :     # The threshold should vary depending on solution viscosity etc.
                 transfer(selected_pipette,float(vol),source,dest,h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False)
             else:
-                transfer(selected_pipette,float(vol),source,dest,h,blow_out=True,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False)
+                transfer(selected_pipette,float(vol),source,dest,h,blow_out=True,blowout_cycle=int(blowout_cycle),max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False)
         else:
             if float(vol) < float(blowout_threshold) :     # The threshold should vary depending on solution viscosity etc.
                 transfer(selected_pipette,float(vol),source,dest,h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,mix_after=(mix_after_cycle,min([float(vol),tiplimit_map[pipette_name[current_mount]][tip_type]['max']])))
                 last_source[current_mount] = ['tip','dipped']
             else:
-                transfer(selected_pipette,float(vol),source,dest,h,blow_out=True,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d)
+                transfer(selected_pipette,float(vol),source,dest,h,blow_out=True,blowout_cycle=int(blowout_cycle),max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d)
         if touchtip.lower() == 'both' or 'after':
             last_source[current_mount] = ['tip','touched']
         dest_history.append([d_slot,d_well])
