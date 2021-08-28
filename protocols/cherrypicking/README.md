@@ -76,7 +76,7 @@ Explanation of complex parameters below:
 7. Hit 'Run'.
 
 ### Additional Notes
-The used tiprack should be put north-side-south to keep 'A1' filled for calibration. After cherrypicking completes, the robot will rearrange tips on the last tiprack to make either 'A1' or 'H12' filled for your next use.  
+The used tiprack should be put north-side-south to keep 'A1' filled for labware calibration. After cherrypicking completes, the robot will rearrange tips on the last tiprack to make either 'A1' or 'H12' filled for your next use.  
 Monitoring the robot behavior during initial verification phase is highly recommended to minimize human error of setup.   
 If you have any questions about this protocol, please contact the Protocol Development Team by filling out the [Troubleshooting Survey](https://protocol-troubleshooting.paperform.co/).
 
