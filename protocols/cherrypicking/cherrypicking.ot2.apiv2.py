@@ -6,8 +6,6 @@ metadata = {
 
 }
 
-from opentrons import protocol_api
-
 class OT2_state_class():
     def __init__(self):
         self.name_dict = {}
@@ -74,7 +72,7 @@ def run(ctx):
 
     [transfer_csv, profile, mode] = get_values("transfer_csv","profile","mode")
 
-    parameters = ["left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse", "right_tipracks_start", "left_tip_last_well", "right_tip_last_well", "mode", "initial_verification", "blowout_threshold", "blowout_cycle", "max_carryover", "distribute_threshold", "light_on", "mix_after_cycle", "drop_dirtytip", "mix_cycle_limit"]
+    parameters = ["left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse", "right_tipracks_start", "left_tip_last_well", "right_tip_last_well", "mode", "initial_verification", "blowout_threshold", "blowout_cycle", "max_carryover", "light_on", "mix_after_cycle", "drop_dirtytip", "mix_cycle_limit", "touch_new_dest"]
 
     mode_map = {
         'safe_mode':{
@@ -85,8 +83,8 @@ def run(ctx):
             'allow_carryover':False,
             'mix_after_cycle':2,        # Pipetting cycle after dispensing to make sure all tip content is transfered to the destination.
             'drop_dirtytip':True,
-            'distribute_threshold':1000,
-            'mix_cycle_limit':100
+            'mix_cycle_limit':100,
+            'touch_new_dest':True
         },
         'simple_mode':{
             'tip_reuse':'once',
@@ -96,8 +94,8 @@ def run(ctx):
             'allow_carryover':'True',
             'mix_after_cycle':1,
             'drop_dirtytip':False,
-            'distribute_threshold':1000,
-            'mix_cycle_limit':100
+            'mix_cycle_limit':100,
+            'touch_new_dest':True
         },
         'custom_mode':{
         },
@@ -469,16 +467,16 @@ def run(ctx):
             pick_up()
 
         last_source[OT2_state.current_mount] = [s_slot,s_well]    #This variable is to control drop_tip rule in tip_reuse=once case
-        if not [d_slot,d_well] in dest_history:         #If destination well is clean, destination pipetting is replaced by once of blow out above the bottom of destination.
+        if not [d_slot,d_well] in dest_history and touch_new_dest:         #If destination well is clean, destination pipetting is replaced by once of blow out above the bottom of destination.
             if detail_comment :
                 ctx.comment('Debug: The destnation of next transfer is empty. Tip is assumed to be clean and not replaced if tip_reuse rule is "once"')
             if float(vol) < float(blowout_threshold) :     # The threshold should vary depending on solution viscosity etc.
-                transfer(float(vol),source,dest,h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False)
+                transfer(float(vol),source,dest,h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False,blowout_cycle=int(blowout_cycle))
             else:
                 transfer(float(vol),source,dest,h,blow_out=True,blowout_cycle=int(blowout_cycle),max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False)
         else:
             if float(vol) < float(blowout_threshold) :     # The threshold should vary depending on solution viscosity etc.
-                transfer(float(vol),source,dest,h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,mix_after=(mix_after_cycle,min(float(vol),OT2_state.max)))
+                transfer(float(vol),source,dest,h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,mix_after=(mix_after_cycle,min(float(vol),OT2_state.max)),blowout_cycle=int(blowout_cycle))
                 last_source[OT2_state.current_mount] = ['tip','dipped']
             else:
                 transfer(float(vol),source,dest,h,blow_out=True,blowout_cycle=int(blowout_cycle),max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d)
