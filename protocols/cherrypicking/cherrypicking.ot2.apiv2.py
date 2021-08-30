@@ -42,7 +42,7 @@ class OT2_state_class():
             self.swap = False
 
     def select_mount (self,volume):
-        # In case only one pipette was installed.
+        # In case only one pipette is installed.
         if len(self.name_dict) == 1:
             for hand in self.name_dict.keys():
                 self.mount(hand)
@@ -317,7 +317,10 @@ def run(ctx):
         # In case the first tiprack gets empty
         elif ( OT2_state.tip_count_dict[hand]  < OT2_state.tip_last_dict[hand] ) and OT2_state.used_rack_dict[hand] :
             OT2_state.tip_count_dict[hand] += 1
-            tip_well = converter96well(OT2_state.tip_count_dict[hand])
+            if OT2_state.tip_last_dict[hand] == 96:
+                tip_well = converter96well(OT2_state.tip_count_dict[hand])
+            else:
+                tip_well = converter96well(OT2_state.tip_last_dict[hand] - OT2_state.tip_count_dict[hand] + 1)
             OT2_state.pipette.pick_up_tip(OT2_state.first_tiprack_dict[hand][0][tip_well])
         # Other cases
         else :
@@ -327,7 +330,6 @@ def run(ctx):
             OT2_state.used_rack_dict[hand] = False  # Secound round ignores last-tip fork for used rack.
             if detail_comment:
                 ctx.comment('Debug: ' + hand + ' first tiprack is empty. Tip rearrangement step for this tiprack will be skipped.')
-
 
     def transfer(vol,source,dest,source_height,*,blow_out=False,max_carryover=5,mix_after=None,touchtip='',touchtip_d=5,tip_replace=True, blowout_cycle=2) :
         # carryover assignment. mix_after is a tapple (mix cycle, mix volume). tip_replace specify if tip will be replaced during carryover.
@@ -381,20 +383,21 @@ def run(ctx):
 
     # Initial verification phase
     if bool(initial_verification) :
-        if detail_comment:
-            ctx.comment('Initial verification phase: Testing tiprack calibration of both pipettes (to avoid a rare gantry crane error and to double-check the configurations of the first tipracks for both pipettes).')
+        ctx.comment('Initial verification phase: Individual pipette(s) is now picking up the last tip of the first tiprack(s) and move to the center of the top of the first source well. Pause manually if calibration or configuration is incorrect.')
         ctx.set_rail_lights(light_map[light_on][0])
         for hand in OT2_state.name_dict.keys():
             OT2_state.pipette_dict[hand].pick_up_tip(OT2_state.first_tiprack_dict[hand][0][parse_well(tip_last_well[hand])])
+            OT2_state.pipette_dict[hand].aspirate(OT2_state.min_dict[hand],ctx.loaded_labwares[
+            int(transfer_info[0][1])].wells_by_name()[parse_well(transfer_info[0][2])].top())
+            ctx.delay(seconds=3)
             OT2_state.pipette_dict[hand].return_tip()
         ctx.set_rail_lights(light_map[light_on][2])
-        ctx.pause('Resume OT-2 protocol once you confirm optimal calibration of installed pipette(s) and the last tip(s) are picked up from the first rack(s) by individual pipette(s)')
-
+    
+    ctx.comment('Transfering phase has started.')
     last_source = {'left':[],'right':[]}
     dest_history = []
     if detail_comment:
         ctx.comment('Debug: Source cashe and destination history are initialized')
-
     ctx.set_rail_lights(light_map[light_on][1])
     for line in transfer_info:
         _, s_slot, s_well, h, _, d_slot, d_well, vol, mix, touchtip, touchtip_d = line[:11]
@@ -488,22 +491,6 @@ def run(ctx):
         if OT2_state.pipette_dict[hand].has_tip:
             OT2_state.pipette_dict[hand].drop_tip()
             if detail_comment:
-                ctx.comment('Debug: Tip on ' + hand + ' pipette is dropped into trash as all liquid handling process completed.')
-
-    # Rearrange remaining tips in the first tipracks
-    if detail_comment:
-        ctx.comment('Debug: Tips are rearranged for future use. Either A1 or H12 will be filled.')
-
-    for hand in OT2_state.name_dict.keys():
-        if OT2_state.used_rack_dict[hand]:
-            if OT2_state.tip_count_dict[hand] > 96 - OT2_state.tip_last_dict[hand]:
-                for well_num in range (int(OT2_state.tip_last_dict[hand]) + 1, 97) :
-                    OT2_state.pipette_dict[hand].pick_up_tip(OT2_state.first_tiprack_dict[hand][0][converter96well(OT2_state.tip_count_dict[hand] + 97 - well_num)])
-                    OT2_state.pipette_dict[hand].drop_tip(left_first_tiprack[0][converter96well(well_num)])
-            else :
-                for well_num in range (1 , left_tip_count + 1) :
-                    OT2_state.pipette_dict[hand].pick_up_tip(OT2_state.first_tiprack_dict[hand][0][converter96well(OT2_state.tip_last_dict[hand] - well_num + 1)])
-                    OT2_state.pipette_dict[hand].drop_tip(OT2_state.first_tiprack_dict[hand][0][converter96well(well_num)])
+                ctx.comment('Debug: Tip on ' + hand + ' pipette is dropped into trash as all job completed.')
     ctx.set_rail_lights(light_map[light_on][3])
-    if detail_comment:
-        ctx.comment('Debug: Job completed.')
+    ctx.comment('All job completed.')
