@@ -1,14 +1,8 @@
-def get_values(*names):
-    import json
-    _all_values = json.loads("""{"transfer_csv":"Source Labware,Source Slot,Source Well,Source Aspiration Height Above Bottom (in mm),Dest Labware,Dest Slot,Dest Well,Volume (in ul),Mixing Volume Before Aspirate (in ul or [blank] to skip or 0 to pause for manual mixing),Touch_tip(Before/After/Both/[blank]),touch_tip_distance(in mm default=0)\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A1,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B1,20,,,\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A1,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B1,20,,,\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A1,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B2,200,,,\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A1,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B2,200,,,\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A2,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B3,200,,,\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A2,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B3,200,,,\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A2,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B4,20,,,\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A2,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B4,20,,,\\nopentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,A3,1,opentrons_24_tuberack_eppendorf_1.5ml_safelock_snapcap,1,B5,1000,,,","left_pipette_type":"p20_single_gen2","right_pipette_type":"p300_single_gen2","tip_type":"standard","tip_reuse":"once","right_tipracks_start":10,"left_tip_last_well":"H12","right_tip_last_well":"C6","mix_after_cycle":2,"light_on":"start_end","max_carryover":5,"blowout_cycle":2,"blowout_threshold":1000,"initial_verification":"True","mode":"debug_mode","drop_dirtytip":"True","mix_cycle_limit":100,"touch_new_dest":"True","profile":"No Profile"}""")
-    return [_all_values[n] for n in names]
-
 metadata = {
     'protocolName': 'Extended Cherrypicking',
     'author': 'Yusuke Sakai <yusuke.sakai@riken.jp>',
     'source': 'Modified from Opentrons Cherrypicking',
     'apiLevel': '2.10'
-
 }
 
 class OT2_state_class():
@@ -77,34 +71,46 @@ def run(ctx):
 
     [transfer_csv, profile, mode] = get_values("transfer_csv","profile","mode")
 
-    parameters = ["left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse", "right_tipracks_start", "left_tip_last_well", "right_tip_last_well", "mode", "initial_verification", "blowout_threshold", "blowout_cycle", "max_carryover", "light_on", "mix_after_cycle", "drop_dirtytip", "mix_cycle_limit", "touch_new_dest"]
+    parameters = ["left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse", "right_tipracks_start", "left_tip_last_well", "right_tip_last_well", "mode", "initial_verification", "blowout_above", "blowout_cycle", "max_carryover", "light_on", "mix_after_cycle", "drop_dirtytip", "mix_cycle_limit", "touch_new_dest"]
 
     mode_map = {
         'safe_mode':{
             'tip_reuse':'always',
             'initial_verification':True,
-            'blowout_threshold':1000,
-            'blowout_cycle':2,          # Twice of pipetting is always performed in destination well
-            'allow_carryover':False,
+            'blowout_above':1001,       # Always make pipetting in destination well.
+            'blowout_cycle':3,          # Three times of pipetting is always performed in destination well.
+            'max_carryover':5,          # Carryover cycle is limited by this value.
             'mix_after_cycle':2,        # Pipetting cycle after dispensing to make sure all tip content is transfered to the destination.
-            'drop_dirtytip':True,
-            'mix_cycle_limit':100,
-            'touch_new_dest':True
+            'drop_dirtytip':True,       # If drop tip on inactive pipette when the otehr pipette is in use. 
+            'mix_cycle_limit':100,      # Mix cycle is autoomatically adjusted when specified value is above pipette max limit. Specify the maximum number.
+            'touch_new_dest':True       # Assume tip is not contaminated yet when the destination well is not filled in CSV file as of transfer.
         },
         'simple_mode':{
             'tip_reuse':'once',
             'initial_verification':False,
-            'blowout_threshold':50,      # Transfering 50 µL or less than 50 µL will be performed with a pipetting in destination well
+            'blowout_above':50,      # Transfering 50 µL or less than 50 µL will be performed with a pipetting in destination well
             'blowout_cycle':2,
-            'allow_carryover':'True',
+            'max_carryover':5,
             'mix_after_cycle':1,
             'drop_dirtytip':False,
             'mix_cycle_limit':100,
             'touch_new_dest':True
         },
+        'test_mode':{
+            'tip_reuse':'never',
+            'initial_verification':True,
+            'blowout_cycle':1,
+            'max_carryover':0,
+            'mix_after_cycle':0,
+            'drop_dirtytip':False,
+            'mix_cycle_limit':0,
+            'touch_new_dest':True,
+            'safety_catch':False,
+            'detail_comment':True
+        },
         'custom_mode':{
         },
-        'debug_mode':{                   # This mode remove safety catches (script lines to return error during simulation phase) allows user to read detail comments to find error.
+        'debug_mode':{                   # This mode remove safety lines (script lines to return error during simulation phase) allows user to read detail comments to find error.
         'safety_catch':False,
         'detail_comment':True
         }
@@ -263,45 +269,6 @@ def run(ctx):
         well_position_num = (column - 1) * 8 + row_num
         return well_position_num
 
-    # load labware
-    transfer_info = [[val.strip().lower() for val in line.split(',')]
-                     for line in transfer_csv.splitlines()
-                     if line.split(',')[0].strip()][1:]
-    for line in transfer_info:
-        s_lw, s_slot, d_lw, d_slot = line[:2] + line[4:6]
-        for slot, lw in zip([s_slot, d_slot], [s_lw, d_lw]):
-            if not int(slot) in ctx.loaded_labwares:
-                ctx.load_labware(lw.lower(), slot)
-
-    OT2_state = OT2_state_class()
-    OT2_state.tip_last_dict = {'left':converter96well_invert(parse_well(left_tip_last_well)),'right':converter96well_invert(parse_well(right_tip_last_well))}
-
-    # load tipracks to remaining empty slots. Used tack of each pipette is installed to slot with youngest number
-    if not right_tipracks_start == 1 :
-        for slot in range(1,right_tipracks_start) :
-            if not int(slot) in ctx.loaded_labwares:
-                OT2_state.tipracks_dict['left'].append(ctx.load_labware(tiprack_map[left_pipette_type][tip_type], str(slot)))
-        OT2_state.tipracks_dict['left'] = OT2_state.tipracks_dict['left'][1:] + OT2_state.tipracks_dict['left'][0:1]
-    for slot in range(right_tipracks_start,12) :
-        if not int(slot) in ctx.loaded_labwares:
-            OT2_state.tipracks_dict['right'].append(ctx.load_labware(tiprack_map[right_pipette_type][tip_type], str(slot)))
-    OT2_state.tipracks_dict['right'] = OT2_state.tipracks_dict['right'][1:] + OT2_state.tipracks_dict['right'][0:1]
-
-    # load pipettes
-    if not left_pipette_type == '' :
-        OT2_state.pipette_dict['left'] = ctx.load_instrument(left_pipette_type, 'left', tip_racks=OT2_state.tipracks_dict['left'])
-        OT2_state.name_dict['left'] = left_pipette_type
-    if not right_pipette_type == '' :
-        OT2_state.pipette_dict['right'] = ctx.load_instrument(right_pipette_type, 'right', tip_racks=OT2_state.tipracks_dict['right'])
-        OT2_state.name_dict['right'] = right_pipette_type        
-
-    for hand in OT2_state.name_dict.keys():
-        OT2_state.tip_max_dict[hand] = ( len(OT2_state.tipracks_dict[hand]) - 1 ) * 96 + OT2_state.tip_last_dict[hand]
-        OT2_state.first_tiprack_dict[hand] = OT2_state.tipracks_dict[hand][len(OT2_state.tipracks_dict[hand]) - 1:]
-        OT2_state.max_dict[hand] = tiplimit_map[OT2_state.name_dict[hand]][tip_type]['max']
-        OT2_state.min_dict[hand] = tiplimit_map[OT2_state.name_dict[hand]][tip_type]['min']
-
-
     def pick_up():
         # First used rack counting
         hand = OT2_state.current_mount
@@ -336,16 +303,16 @@ def run(ctx):
             if detail_comment:
                 ctx.comment('Debug: ' + hand + ' first tiprack is empty. Tip rearrangement step for this tiprack will be skipped.')
 
-    def transfer(vol,source,dest,source_height,*,blow_out=False,max_carryover=5,mix_after=None,touchtip='',touchtip_d=5,tip_replace=True, blowout_cycle=2) :
+    def transfer(vol,source,dest,source_height,destination_height,*,blowout_above=1001,max_carryover=5,mix_after=None,touchtip='',touchtip_d=5,tip_replace=True, blowout_cycle=2) :
         # carryover assignment. mix_after is a tapple (mix cycle, mix volume). tip_replace specify if tip will be replaced during carryover.
         transfer_volume = [float(vol)]
         transfer_cycle = 1
         tip_dirty = False
         if touchtip_d == '':
             touchtip_d = 5
-        if OT2_state.max < float(vol) and max_carryover > 1 :  # APIから呼び出せるなら呼び出したい
+        if OT2_state.max < float(vol) :
             transfer_cycle = math.ceil(float(vol)/OT2_state.max)
-            if transfer_cycle > max_carryover:
+            if transfer_cycle > int(max_carryover):
                 ctx.comment('WARNING: Too many carryover cycles:' + str(transfer_cycle) + ' are required. Install appropriate pipettes or modify configurations.')
             if safety_catch :
                 transfer_cycle = min (transfer_cycle,int(max_carryover))    # If carryover is more than user specificed carryover limit, the protocol will return error before run.
@@ -362,19 +329,19 @@ def run(ctx):
             OT2_state.pipette.aspirate(volume=unit_vol,location=source.bottom(int(source_height)))
             if touchtip == 'both' or touchtip == 'before':
                 OT2_state.pipette.touch_tip(location=source,v_offset=(-1*int(touchtip_d)))
-            if bool(blow_out):      # Dispense to destination well from above or at the bottom of the well.
+            if unit_vol >= blowout_above:                               # Dispense to destination well from above or at the bottom of the well.
                 OT2_state.pipette.dispense(volume=unit_vol,location=dest.top(-5))
-            else: 
-                OT2_state.pipette.dispense(volume=unit_vol,location=dest)
+            else:
+                OT2_state.pipette.dispense(volume=unit_vol,location=dest.bottom(int(destination_height)))
                 tip_dirty = True
                 if detail_comment:
                     ctx.comment('Debug: Tip is dipping into destination well.')
             if not mix_after == None:   # If mix_after is specified...
-                OT2_state.pipette.mix(mix_after[0],mix_after[1],dest)
+                OT2_state.pipette.mix(mix_after[0],mix_after[1],dest.bottom(int(destination_height)))
                 tip_dirty = True
                 if detail_comment:
                     ctx.comment('Debug: Tip is used for pipetting in destination well.')
-            for i in range (blowout_cycle) :
+            for i in range (int(blowout_cycle)) :
                 OT2_state.pipette.blow_out(location=dest.top(-5))    #Blow out user specified times (default = 2), as official blow_out setting is too weak. Blow out is executed every transfering movement including carryover to avoid accumulating remainig liquid.
             if touchtip == 'both' or touchtip == 'after':
                 OT2_state.pipette.touch_tip(location=dest,v_offset=(-1*int(touchtip_d)))
@@ -386,9 +353,45 @@ def run(ctx):
                     ctx.comment('Debug: Tip is replaced during a set of carryover process everytime the since tip might be contaminated.')
                 OT2_state.pipette.drop_tip()
 
+
+    # load labware
+    transfer_info = [[val.strip().lower() for val in line.split(',')]
+                     for line in transfer_csv.splitlines()
+                     if line.split(',')[0].strip()][1:]
+    for line in transfer_info:
+        s_lw, s_slot, d_lw, d_slot = line[:2] + line[4:6]
+        for slot, lw in zip([s_slot, d_slot], [s_lw, d_lw]):
+            if not int(slot) in ctx.loaded_labwares:
+                ctx.load_labware(lw.lower(), slot)
+
+    OT2_state = OT2_state_class()
+    OT2_state.tip_last_dict = {'left':converter96well_invert(parse_well(left_tip_last_well)),'right':converter96well_invert(parse_well(right_tip_last_well))}
+
+    # load tipracks to remaining empty slots. Used tack of each pipette is installed to slot with youngest number. Pipettes are installed.
+    if not right_tipracks_start == 1 and not left_pipette_type == '':
+        for slot in range(1,right_tipracks_start) :
+            if not int(slot) in ctx.loaded_labwares:
+                OT2_state.tipracks_dict['left'].append(ctx.load_labware(tiprack_map[left_pipette_type][tip_type], str(slot)))
+        OT2_state.tipracks_dict['left'] = OT2_state.tipracks_dict['left'][1:] + OT2_state.tipracks_dict['left'][0:1]
+        OT2_state.pipette_dict['left'] = ctx.load_instrument(left_pipette_type, 'left', tip_racks=OT2_state.tipracks_dict['left'])
+        OT2_state.name_dict['left'] = left_pipette_type
+    if not right_pipette_type == '' :
+        for slot in range(right_tipracks_start,12) :
+            if not int(slot) in ctx.loaded_labwares:
+                OT2_state.tipracks_dict['right'].append(ctx.load_labware(tiprack_map[right_pipette_type][tip_type], str(slot)))
+        OT2_state.tipracks_dict['right'] = OT2_state.tipracks_dict['right'][1:] + OT2_state.tipracks_dict['right'][0:1]
+        OT2_state.pipette_dict['right'] = ctx.load_instrument(right_pipette_type, 'right', tip_racks=OT2_state.tipracks_dict['right'])
+        OT2_state.name_dict['right'] = right_pipette_type 
+       
+
+    for hand in OT2_state.name_dict.keys():
+        OT2_state.tip_max_dict[hand] = ( len(OT2_state.tipracks_dict[hand]) - 1 ) * 96 + OT2_state.tip_last_dict[hand]
+        OT2_state.first_tiprack_dict[hand] = OT2_state.tipracks_dict[hand][len(OT2_state.tipracks_dict[hand]) - 1:]
+        OT2_state.max_dict[hand] = tiplimit_map[OT2_state.name_dict[hand]][tip_type]['max']
+        OT2_state.min_dict[hand] = tiplimit_map[OT2_state.name_dict[hand]][tip_type]['min']
+
     # Initial verification phase
     if bool(initial_verification) :
-        ctx.comment('Initial verification phase: Individual pipette(s) is now picking up the last tip of the first tiprack(s) and move to the center of the top of the first source well. Pause manually if calibration or configuration is incorrect.')
         ctx.set_rail_lights(light_map[light_on][0])
         for hand in OT2_state.name_dict.keys():
             OT2_state.pipette_dict[hand].pick_up_tip(OT2_state.first_tiprack_dict[hand][0][parse_well(tip_last_well[hand])])
@@ -396,6 +399,7 @@ def run(ctx):
             int(transfer_info[0][1])].wells_by_name()[parse_well(transfer_info[0][2])].top())
             ctx.delay(seconds=3)
             OT2_state.pipette_dict[hand].return_tip()
+        ctx.comment('Initial verification: Pause manually when calibration or configurations are incorrect. Installed pipette(s) are now picking up the last tip of the first tiprack(s) and move to the center of the top of the first source well. ')
         ctx.set_rail_lights(light_map[light_on][2])
     
     ctx.comment('Transfering phase has started.')
@@ -405,33 +409,45 @@ def run(ctx):
         ctx.comment('Debug: Source cashe and destination history are initialized')
     ctx.set_rail_lights(light_map[light_on][1])
     for line in transfer_info:
-        _, s_slot, s_well, h, _, d_slot, d_well, vol, mix, touchtip, touchtip_d = line[:11]
-        source = ctx.loaded_labwares[
-            int(s_slot)].wells_by_name()[parse_well(s_well)]
-        dest = ctx.loaded_labwares[
-                    int(d_slot)].wells_by_name()[parse_well(d_well)]
-        mix_cycle = 10     # Default mixing cycle is 10.
-
+        try:
+            _, s_slot, s_well, h, _, d_slot, d_well, vol, d_h, mix, touchtip, touchtip_d, pipetting_override, distribute_override = line[:14]
+        except:
+            _, s_slot, s_well, h, _, d_slot, d_well, vol = line[:8]
+            d_h = '' 
+            mix = ''
+            touchtip = ''
+            touchtip_d = ''
+            pipetting_override = ''
+            distribute_override = ''
+            ctx.comment('CAUTION: Only required columns of input CSV file was read. No options were applied.')
+        source = ctx.loaded_labwares[int(s_slot)].wells_by_name()[parse_well(s_well)]
+        dest = ctx.loaded_labwares[int(d_slot)].wells_by_name()[parse_well(d_well)]
+        if d_h == '':
+            d_h = 1
+            if detail_comment:
+                ctx.comment('Debug: Unspecified destination height is set to default 1 mm from the bottom.')
         # Mix source solution before transfering
+        mix_cycle = 10     # Default mixing cycle is 10.
         if mix == '0' :  #In case of 0, pause and manual mixing will be added.
             ctx.set_rail_lights(light_map[light_on][2])
-            ctx.pause('Please mix destination tubes manually, spin them down, and resume the robot.')
+            ctx.pause('Please mix destination labwares manually, spin them down, and resume the robot. The destination paused the robot is:' + s_well + ' in ' + str(s_slot) + '.')
             ctx.set_rail_lights(light_map[light_on][1])
         elif not mix == '' :
             OT2_state.select_mount(float(mix))
             if OT2_state.swap: # Dirty tip on not-selected pipette won't fly above labwares if user specifiy.
                 if detail_comment:
                     ctx.comment('Debug: ' + OT2_state.current_mount + ' pipette is selected.')
-                if OT2_state.last_pipette.has_tip and drop_dirtytip:
+                if OT2_state.last_pipette.has_tip and bool(drop_dirtytip) and not tip_reuse == 'never':
                     OT2_state.last_pipette.drop_tip()
                     if detail_comment:
                         ctx.comment('Debug: Dirty tip on ' + OT2_state.last_mount + ' pipette is dropped into trash.')
             mix_cycle = max(10, round(10*float(mix)/OT2_state.max))
             mix_volume = min(float(mix),OT2_state.max)
-            if mix_cycle > mix_cycle_limit:
+            if mix_cycle > int(mix_cycle_limit):
                 ctx.comment('WARNING: Too many mixing cycle (' + str(mix_cycle) + ' cycles) is required to mix source well:' + s_well + ' in Slot ' + s_slot +'. Consider to pause OT-2 to vortex manually (input "0" in the mix configuration column of CSV file) as a faster option or install appropriate pipettes.') 
                 if safety_catch :
                     mix_volume = float(mix) # If mix cycle is more than user specificed limit, the protocol will return error before run.
+                    mix_cycle = int(mix_cycle_limit)
             if OT2_state.pipette.has_tip:
                 if tip_reuse == 'always' :
                     OT2_state.pipette.drop_tip()
@@ -456,7 +472,7 @@ def run(ctx):
             if detail_comment:
                 ctx.comment('Debug: ' + OT2_state.current_mount + ' pipette is selected.')
             if not OT2_state.last_pipette == None:
-                if OT2_state.last_pipette.has_tip and drop_dirtytip:
+                if OT2_state.last_pipette.has_tip and bool(drop_dirtytip) and not tip_reuse == 'never':
                     OT2_state.last_pipette.drop_tip()
                     if detail_comment:
                         ctx.comment('Debug: Dirty tip on ' + OT2_state.last_mount + ' pipette is dropped into trash.')
@@ -475,31 +491,34 @@ def run(ctx):
             pick_up()
 
         last_source[OT2_state.current_mount] = [s_slot,s_well]    #This variable is to control drop_tip rule in tip_reuse=once case
-        if not [d_slot,d_well] in dest_history and touch_new_dest:         #If destination well is clean, destination pipetting is replaced by once of blow out above the bottom of destination.
+        if not [d_slot,d_well] in dest_history and bool(touch_new_dest):         #If destination well is clean, destination pipetting is replaced by once of blow out above the bottom of destination.
             if detail_comment :
                 ctx.comment('Debug: The destnation of next transfer is empty. Tip is assumed to be clean and not replaced if tip_reuse rule is "once"')
-            if float(vol) < float(blowout_threshold) :     # The threshold should vary depending on solution viscosity etc.
-                transfer(float(vol),source,dest,h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False,blowout_cycle=int(blowout_cycle))
+            if not pipetting_override == '' : 
+                if detail_comment :
+                    ctx.comment('Debug: Pipetting cycle is overridden by CSV value')
+                transfer(float(vol),source,dest,h,d_h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False,blowout_cycle=int(blowout_cycle),mix_after=(int(pipetting_override),min(float(vol),OT2_state.max)))
+            elif float(vol) < float(blowout_above) :     # The threshold should vary depending on solution viscosity etc.
+                transfer(float(vol),source,dest,h,d_h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False,blowout_cycle=int(blowout_cycle))
             else:
-                transfer(float(vol),source,dest,h,blow_out=True,blowout_cycle=int(blowout_cycle),max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False)
+                transfer(float(vol),source,dest,h,d_h,blowout_above=float(blowout_above),blowout_cycle=int(blowout_cycle),max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,tip_replace=False)
         else:
-            if float(vol) < float(blowout_threshold) :     # The threshold should vary depending on solution viscosity etc.
-                transfer(float(vol),source,dest,h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,mix_after=(mix_after_cycle,min(float(vol),OT2_state.max)),blowout_cycle=int(blowout_cycle))
+            if float(vol) < float(blowout_above) :     # The threshold should vary depending on solution viscosity etc.
+                transfer(float(vol),source,dest,h,d_h,max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d,mix_after=(int(mix_after_cycle),min(float(vol),OT2_state.max)),blowout_cycle=int(blowout_cycle))
                 last_source[OT2_state.current_mount] = ['tip','dipped']
             else:
-                transfer(float(vol),source,dest,h,blow_out=True,blowout_cycle=int(blowout_cycle),max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d)
+                transfer(float(vol),source,dest,h,d_h,blowout_above=float(blowout_above),blowout_cycle=int(blowout_cycle),max_carryover=int(max_carryover),touchtip=touchtip.lower(),touchtip_d=touchtip_d)
+
         if touchtip.lower() == 'both' or touchtip.lower() == 'after':
             last_source[OT2_state.current_mount] = ['tip','touched']
         dest_history.append([d_slot,d_well])
 
     for hand in OT2_state.name_dict.keys():
+        if mode == 'test_mode':                              # In case of test mode, tip will be returned to tipracks.
+            OT2_state.pipette_dict[hand].return_tip()
         if OT2_state.pipette_dict[hand].has_tip:
             OT2_state.pipette_dict[hand].drop_tip()
             if detail_comment:
                 ctx.comment('Debug: Tip on ' + hand + ' pipette is dropped into trash as all job completed.')
     ctx.set_rail_lights(light_map[light_on][3])
     ctx.comment('All job completed.')
-
-# 210830 Test 2
-# To debug initial verification and tip counter.
-# Automatically generated by dna-origami-db.
