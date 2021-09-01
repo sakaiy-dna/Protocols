@@ -96,26 +96,44 @@ def run(ctx):
             'mix_after_cycle':2,        # Pipetting cycle after dispensing to make sure all tip content is transfered to the destination.
             'drop_dirtytip':True,       # If drop tip on inactive pipette when the otehr pipette is in use. 
             'mix_cycle_limit':100,      # Mix cycle is autoomatically adjusted when specified value is above pipette max limit. Specify the maximum number.
-            'distribute_above':1001,
-            'return_source':False,      # Not return source if distribute occur. Minimum of volume used pipette will be discarded.
-            'store_dest_history':True,      # Assume tip is not contaminated yet when the destination well is not filled in CSV file as of transfer.
-            'step_delay':1,             # robot will pause specified seconds after aspiration and before blowout for viscous reagent.
-            'pipette_rate':1
+            'distribute_above':1000,    # The protocol start distribute function when the line has volume above this value (µL).
+            'return_source':False,      # Distribute won't occur as the threshold above but here NOT return source after distibute is specified. Minimum of volume used pipette will be discarded.
+            'store_dest_history':True,  # Assume tip is not contaminated yet when the destination is not specified as destination as of transfer.
+            'step_delay':1,             # robot will pause for specified seconds after aspiration and before blowout for viscous reagent.
+            'pipette_rate':1,
+            'light_on':'always_off'
         },
         'simple_mode':{
+            'tip_reuse':'once',      # tip will be replaced only when the tip might be contaminated.
+            'initial_verification':True,
+            'blowout_above':50,      # Transfering less than 50 µL will be performed with a pipetting in destination well
+            'blowout_cycle':2,
+            'max_carryover':5,
+            'mix_after_cycle':1,
+            'drop_dirtytip':True,
+            'mix_cycle_limit':30,
+            'distribute_above':1000,
+            'return_source':True,
+            'store_dest_history':True,
+            'step_delay':0,
+            'pipette_rate':1,
+            'run_off':'always_off'
+        },
+        'rapid_mode':{
             'tip_reuse':'once',
             'initial_verification':False,
-            'blowout_above':50,      # Transfering 50 µL or less than 50 µL will be performed with a pipetting in destination well
+            'blowout_above':20,      # Transfering less than 20 µL will be performed with a pipetting in destination well
             'blowout_cycle':2,
             'max_carryover':5,
             'mix_after_cycle':1,
             'drop_dirtytip':False,
-            'mix_cycle_limit':100,
-            'distribute_above':True,
+            'mix_cycle_limit':10,
+            'distribute_above':100,
             'return_source':True,
             'store_dest_history':True,
             'step_delay':0,
-            'pipette_rate':1
+            'pipette_rate':1,
+            'run_off':'always_off'
         },
         'test_mode':{
             'tip_reuse':'never',
@@ -129,7 +147,8 @@ def run(ctx):
             'safety_catch':False,
             'detail_comment':True,
             'step_delay':0,
-            'pipette_rate':1
+            'pipette_rate':1,
+            'light_on':'always_on'
         },
         'custom_mode':{
         },
