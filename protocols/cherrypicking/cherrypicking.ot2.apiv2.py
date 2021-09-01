@@ -117,7 +117,7 @@ def run(ctx):
             'store_dest_history':True,
             'step_delay':0,
             'pipette_rate':1,
-            'run_off':'always_off'
+            'light_on':'run_off'
         },
         'rapid_mode':{
             'tip_reuse':'once',
@@ -133,7 +133,7 @@ def run(ctx):
             'store_dest_history':True,
             'step_delay':0,
             'pipette_rate':1,
-            'run_off':'always_off'
+            'light_on':'run_off'
         },
         'test_mode':{
             'tip_reuse':'never',
@@ -158,20 +158,19 @@ def run(ctx):
         }
     }
 
-    default_dict={'safety_catch':True,'detail_comment':False}
-
-    parameter_dict = {}
-    for name in parameters:
-        parameter_dict[name]=get_values(name)[0]
-
-    # Profile overides mode and other parameters apart from right/left last_tip_well and right tipracks start
     profile_dict = {}
     if not profile == 'No Profile' :
         for line in profile.splitlines() :
             profile_dict[line.split(':')[0]] = line.split(':')[1]
+    
+    default_dict={'safety_catch':True,'detail_comment':False}
+
+    parameter_dict = {}                    # parameters from the form are applied
+    for name in parameters:
+        parameter_dict[name]=get_values(name)[0]
 
     parameter_dict.update(default_dict)     # default values are applied
-    parameter_dict.update(mode_map[mode])   # mode setting has priority than individual parameter or default values
+    parameter_dict.update(mode_map[mode])   # mode setting has priority than individual parameters or default values
     parameter_dict.update(profile_dict)     # user specified profile has priority than other setting
 
     globals().update(parameter_dict)
