@@ -51,13 +51,13 @@
   },
   {
     "type": "str",
-    "label": "The well of the last tip in the First Rack (Left Pipette)*",
+    "label": Last Tip Well (Left)",
     "name": "left_tip_last_well",
     "default": "H12"
   },
   {
     "type": "str",
-    "label": "The well of the last tip in the First Rack (Right Pipette)*",
+    "label": "Right Tip Well (Right)",
     "name": "right_tip_last_well",
     "default": "H12"
   },
@@ -68,7 +68,10 @@
     "options": [
       {"label": "Simple Mode", "value": "simple_mode"},
       {"label": "Safe Mode", "value": "safe_mode"},
-      {"label": "Custom (Following options applied)", "value": "custom_mode"}
+      {"label": "Rapid Mode", "value": "rapid_mode"},
+      {"label": "Custom Mode (Following options applied)", "value": "custom_mode"},
+      {"label": "Test Mode", "value": "test_mode"},
+      {"label": "Debug Mode (Following options applied)", "value": "debug_mode"}
     ]
   },
   {
@@ -91,21 +94,43 @@
     ]
   },
   {
+    "type": "dropDown",
+    "label": "Tip Type",
+    "name": "initial_verification",
+    "options": [
+      {"label": "Standard", "value": "standard"},
+      {"label": "Filter", "value": "filter"}
+    ]
+  },
+  {
+    "type": "ini",
+    "label": "Destination Pipetting Cycle",
+    "name": "mix_after_cycle",
+    "default": 1
+  },
+
+  {
     "type": "int",
-    "label": "Blow out threshold (in µL, transfering lower than this volume will be pipetted in destination well)",
+    "label": "Blow Out Above Threshold (in µL)",
+    "name": "blowout_above",
+    "default": 50
+  },
+  {
+    "type": "int",
+    "label": "Blow Out Cycle",
     "name": "blowout_threshold",
     "default": 50
   },
   {
-    "type": "ini",
-    "label": "Maximum carryover cycles when the transfering volume is higher than the pipette capacity.",
-    "name": "max_carryover",
-    "default": 5
+    "type": "int",
+    "label": "Step Delay (in sec)",
+    "name": "blowout_threshold",
+    "default": 0
   },
   {
-    "type": "ini",
-    "label": "Pipetting cycle when the transfering volume is lower than blow out threshold.",
-    "name": "mix_after_cycle",
+    "type": "int",
+    "label": "Relative Pipette Rate",
+    "name": "pipette_rate",
     "default": 1
   },
   {
@@ -120,6 +145,63 @@
       {"label": "Always light OFF", "always_off"}
     ]
   },
+  {
+    "type": "int",
+    "label": "Distribute Above Threshold (in µL)",
+    "name": "distribute_above",
+    "default": 1000
+  },
+  {
+    "type": "dropDown",
+    "label": "Return Distribute Disposal To Source",
+    "name": "return_source",
+    "options": [
+      {"label": "Yes", "value": "True"},
+      {"label": "No", "value": "False"}
+    ]
+  },
+  {
+    "type": "ini",
+    "label": "Maximum Carryover Cycles",
+    "name": "max_carryover",
+    "default": 5
+  },
+  {
+    "type": "ini",
+    "label": "Maximum Mix Cycles",
+    "name": "mix_cycle_limit",
+    "default": 30
+  },
+  {
+    "type": "dropDown",
+    "label": "Drop Inactive Pipette Tip",
+    "name": "drop_dirtytip",
+    "options": [
+      {"label": "Always", "value": "True"},
+      {"label": "Never", "value": "False"}
+    ]
+  },
+  {
+    "type": "dropDown",
+    "label": "Keep Same Tip Between Mix And Transfer",
+    "name": "mix_same_tip",
+    "options": [
+      {"label": "Keep Same", "value": "True"},
+      {"label": "Replace Tip", "value": "False"}
+    ]
+  },
+  {
+    "type": "dropDown",
+    "label": "Destination History",
+    "name": "drop_dirtytip",
+    "options": [
+      {"label": "Active", "value": "True"},
+      {"label": "Disabled", "value": "False"}
+    ]
+  },
+
+
+
   {
     "type": "textFile",
     "label": "Custom Profile (Last tip wells and start slot of the right tiprack * must be input above. Other parameters are overridden by the profile)",
