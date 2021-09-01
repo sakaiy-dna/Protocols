@@ -91,7 +91,7 @@ def run(ctx):
             'tip_reuse':'always',
             'initial_verification':True,
             'blowout_above':1001,       # Always make pipetting in destination well.
-            'blowout_cycle':3,          # Three times of pipetting is always performed in destination well.
+            'blowout_cycle':3,          # Three times of blowing out is always performed.
             'max_carryover':5,          # Carryover cycle is limited by this value.
             'mix_after_cycle':2,        # Pipetting cycle after dispensing to make sure all tip content is transfered to the destination.
             'drop_dirtytip':True,       # If drop tip on inactive pipette when the otehr pipette is in use. 
