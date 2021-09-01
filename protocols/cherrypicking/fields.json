@@ -51,7 +51,7 @@
   },
   {
     "type": "str",
-    "label": Last Tip Well (Left)",
+    "label": "Last Tip Well (Left)",
     "name": "left_tip_last_well",
     "default": "H12"
   },
@@ -199,13 +199,10 @@
       {"label": "Disabled", "value": "False"}
     ]
   },
-
-
-
   {
     "type": "textFile",
-    "label": "Custom Profile (Last tip wells and start slot of the right tiprack * must be input above. Other parameters are overridden by the profile)",
-    "name": "custom_mode_profile",
+    "label": "Custom Profile",
+    "name": "profile",
     "default": "No Profile"
   }
 ]
