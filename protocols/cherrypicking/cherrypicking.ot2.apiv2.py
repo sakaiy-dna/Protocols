@@ -84,7 +84,7 @@ def run(ctx):
 
     [transfer_csv, profile, mode] = get_values("transfer_csv","profile","mode")
 
-    parameters = ["left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse", "right_tipracks_start", "left_tip_last_well", "right_tip_last_well", "mode", "initial_verification", "blowout_above", "distribute_above","blowout_cycle", "max_carryover", "light_on", "mix_after_cycle", "drop_dirtytip", "mix_cycle_limit", "store_dest_history", "pipette_rate","step_delay","return_source"]
+    parameters = ["left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse", "right_tipracks_start", "left_tip_last_well", "right_tip_last_well", "mode", "initial_verification", "blowout_above", "distribute_above","blowout_cycle", "max_carryover", "light_on", "mix_after_cycle", "drop_dirtytip", "mix_cycle_limit", "store_dest_history", "pipette_rate","step_delay","return_source","mix_same_tip"]
 
     mode_map = {
         'safe_mode':{
@@ -101,6 +101,7 @@ def run(ctx):
             'store_dest_history':True,  # Assume tip is not contaminated yet when the destination is not specified as destination as of transfer.
             'step_delay':1,             # robot will pause for specified seconds after aspiration and before blowout for viscous reagent.
             'pipette_rate':1,
+            'mix_same_tip':True,
             'light_on':'always_off'
         },
         'simple_mode':{
@@ -115,6 +116,7 @@ def run(ctx):
             'distribute_above':1000,
             'return_source':True,
             'store_dest_history':True,
+            'mix_same_tip':True,
             'step_delay':0,
             'pipette_rate':1,
             'light_on':'run_off'
@@ -133,6 +135,7 @@ def run(ctx):
             'store_dest_history':True,
             'step_delay':0,
             'pipette_rate':1,
+            'mix_same_tip':True,
             'light_on':'run_off'
         },
         'test_mode':{
@@ -148,6 +151,7 @@ def run(ctx):
             'detail_comment':True,
             'step_delay':0,
             'pipette_rate':1,
+            'mix_same_tip':True,
             'light_on':'always_on'
         },
         'custom_mode':{
