@@ -7,10 +7,8 @@ Yusuke Sakai
 
 Thoroughly customizable single channel transfer protocol is derived from official Cherrypicking protocol[https://protocols.opentrons.com/protocol/cherrypicking]. Two different single channel pipettes can be installed to transfer liquid according to a CSV input, including source mixing step before transfer, pipetting in destination, distributing to multiple destinations at once, etc. It accepts one used tiprack per pipette, makes your life easier. CSV file will specify labware, slot, well by name of source and destination, height-from-bottom to aspirate, and transfering volume. Optionally, the user can add source mixing step with specified volume (or pause the robot for manual vortexing), which allows the user to arrange a cascade mixing protocol (such as premix preparation for accurate biochemical assay) in a single run. For viscous samples, pipetting in destination for user-specified cycles at the user-specified position from bottom, touch-tip at either or both source and destination, overall pipette rate control are supported to tune globally (parameter) or sample specifically (CSV file override).
 ![Scheme](https://user-images.githubusercontent.com/70700401/132171714-a0e5b923-e4cc-4e80-b25d-e5051c891aa1.png)
-<img width="1935" alt="Scheme_fig" src="https://user-images.githubusercontent.com/70700401/132174210-ee0226f7-a61c-40be-9974-e773c7450b55.png">
 
-
-Explanation of complex parameters below:  
+### Explanation of Parameters 
 **Required parameters:**  
 * `input .csv file`: Here, you should upload a .csv file formatted in the [following way](https://opentrons-protocol-library-website.s3.amazonaws.com/custom-README-images/1211/example.csv), making sure to include headers in your csv file. Refer to our [Labware Library](https://labware.opentrons.com/?category=wellPlate) to copy API names for labware to include in the `Source Labware` and `Dest Labware` columns of the .csv. Custom labwares can be added here once your JSON file is stored in your Opentrons app.
 * `Left Pipette Model`: Select which single channel pipette on left mount you will use for this protocol. (GEN1 is not tested)
@@ -42,7 +40,7 @@ Explanation of complex parameters below:
 
 
 ### Labware
-* Any verified labware found in our [Labware Library](https://labware.opentrons.com/?category=wellPlate)
+* Any verified labware found in Opentrons [Labware Library](https://labware.opentrons.com/?category=wellPlate)
 * You may use custom labwares by adding them to Opentrons.app. 
 * If you use third-party tipracks, make sure to modify the tiprack map and tiplimit_map in the output protocol file correctly.
 
@@ -93,9 +91,6 @@ Explanation of complex parameters below:
 7. Hit 'Run'.
 
 ### Additional Notes
-The used tiprack should be put north-side-south to keep 'A1' filled always for labware calibration. For used tipracks, the robot picks tips up backward to leave arranged tipracks (`A1` filled) whenever it finishes run before completing the tiprack.
+The used tiprack (from other protocols) should be put north-side-south to make sure `A1` is filled always for labware calibration and no random blanks between the `A1` to the specified `last tip`. For used tipracks, the robot picks tips up in backward to pick up `A1` at the last.  
 Monitoring the robot behavior during initial verification phase is highly recommended to minimize human error of setup.   
-If you have any questions about this protocol, please contact the Protocol Development Team by filling out the [Troubleshooting Survey](https://protocol-troubleshooting.paperform.co/).
-
-###### Internal
-cherrypicking
+If you can not pass first simulation phase on Opentrons app (or simulator), use debug mode to release "safety catch" and open detail comments to find the cause of the error. The comment starting from "WARNING:" (and of course returend line number from the app) would help you to determine the problem. The safety catches are integrated in the protocol to return some error intentionally to stop you contaminating your samples, mixing eternally etc. If it is just a bug, please let me know to fix it.
