@@ -5,7 +5,7 @@ Yusuke Sakai
 
 ## Description
 
-Thoroughly customizable single channel transfer protocol is derived from official Cherrypicking protocol[https://protocols.opentrons.com/protocol/cherrypicking]. Two different single channel pipettes can be installed to transfer liquid according to a CSV input, including source mixing step before transfer, pipetting in destination, distributing to multiple destinations at once, etc. It accepts one used tiprack per pipette, makes your life easier. CSV file will specify labware, slot, well by name of source and destination, height-from-bottom to aspirate, and transfering volume. Optionally, the user can add source mixing step with specified volume (or pause the robot for manual vortexing), which allows the user to arrange a cascade mixing protocol (such as premix preparation for accurate biochemical assay) in a single run. For viscous samples, pipetting in destination for user-specified cycles at the user-specified position from bottom, touch-tip at either or both source and destination, overall pipette rate control are supported to tune globally (parameter) or sample specifically (CSV file override).
+Thoroughly customizable single channel transfer protocol is derived from official [Cherrypicking protocol](https://protocols.opentrons.com/protocol/cherrypicking). Two different single channel pipettes can be installed to transfer liquid according to a CSV input, including source mixing step before transfer, pipetting in destination, distributing to multiple destinations at once, etc. It accepts one used tiprack per pipette, makes your life easier. CSV file will specify labware, slot, well by name of source and destination, height-from-bottom to aspirate, and transfering volume. Optionally, the user can add source mixing step with specified volume (or pause the robot for manual vortexing), which allows the user to arrange a cascade mixing protocol (such as premix preparation for accurate biochemical assay) in a single run. For viscous samples, pipetting in destination for user-specified cycles at the user-specified position from bottom, touch-tip at either or both source and destination, overall pipette rate control are supported to tune globally (parameter) or sample specifically (CSV file override).
 ![Scheme](https://user-images.githubusercontent.com/70700401/132176184-b0dd2cc6-c537-4b31-ac95-f4ca84a514de.png)
 
 ### Explanation of Parameters 
@@ -58,7 +58,7 @@ Thoroughly customizable single channel transfer protocol is derived from officia
 
 ### Deck Setup
 * Example deck setup - Source and destination labwares are assined automatically according to CSV file. The tipracks for left pipette fills remaining slot from youngest slot number. The tipracks for right pipette is loaded from manually specified slot.
-<img width="1019" alt="sample_layout" src="https://user-images.githubusercontent.com/70700401/132173457-15fc4894-be7e-4ae5-b781-a8756dae6cbb.png">
+![example layout](https://user-images.githubusercontent.com/70700401/132173457-15fc4894-be7e-4ae5-b781-a8756dae6cbb.png)
 
 ---
 
