@@ -3,7 +3,7 @@
     "type": "textFile",
     "label": "Transfer .csv File",
     "name": "transfer_csv",
-    "default": "Source Labware,Source Slot,Source Well,Source Aspiration Height Above Bottom (in mm),Dest Labware,Dest Slot,Dest Well,Transfer Volume (in ul),(Optional) Dest Dispensing Height Above Bottom (in mm),(Optional) 10 Time Mixing Volume Before Aspirate (in ul or [blank] to skip or 0 to pause for manual mixing),(Optional) Inserting Touch Tip Step (Source/Dest/Both/[blank]),(Optional) Touch Tip Depth From Top Of The Well (in mm default=5),(Optional Override Global Setting) Pipetting Cycle After Dispensing (integral including 0=skip pipetting),(Optional Override Global Setting) Forcing Distribute (any no blank forces distribute regardless of transfering volume) \n"
+    "default": "Source Labware,Source Slot,Source Well,Source Aspiration Height Above Bottom (in mm),Dest Labware,Dest Slot,Dest Well,Transfer Volume (in ul),(Optional) Dest Dispensing Height Above Bottom (in mm),(Optional) 10 Time Mixing Volume Before Aspirate (in ul or [blank] to skip or 0 to pause for manual mixing),(Optional) Inserting Touch Tip Step (Source/Dest/Both/[blank]),(Optional) Touch Tip Depth From Top Of The Well (in mm default=5),(Optional Override Global Setting) Relative Pipette Rate (float number default=1=max),(Optional Override Global Setting) Pipetting Cycle After Dispensing (integral including 0=skip pipetting),(Optional Override Global Setting) Forcing Distribute (any no blank forces distribute regardless of transfering volume) \n"
   },
   {
     "type": "dropDown",
