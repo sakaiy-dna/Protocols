@@ -12,7 +12,7 @@ Thoroughly customizable single channel transfer protocol is derived from officia
 ### Explanation of Parameters 
 **Required parameters:**  
 * `input .csv file`: Here, you should upload a .csv file formatted in the [following way](https://github.com/sakaiy-dna/Protocols/files/7115861/example.csv)
-, making sure to include headers in your csv file. Refer to Opentrons [Labware Library](https://labware.opentrons.com/?category=wellPlate) to copy API names for labware to include in the `Source Labware` and `Dest Labware` columns of the .csv. Custom labwares can be added here once your JSON file is stored in your Opentrons app.
+, making sure to include headers in your csv file. Refer to Opentrons [Labware Library](https://labware.opentrons.com/?category=wellPlate) to copy API names for labware to include in the `Source Labware` and `Dest Labware` columns of the .csv. Custom labwares can be added here once the configuration JSON file is stored in your Opentrons app.
 * `Left Pipette Model`: Select which single channel pipette on left mount you will use for this protocol. (GEN1 is not tested)
 * `Right Pipette Model`: Select which single channel pipette on right mount you will use for this protocol. (GEN1 is not tested)
 * `Right Tipracks Start Slot (Slot 1-11)`: Specify starting slot of tipracks for right pipette to set the boarder between two types of tipracks.
