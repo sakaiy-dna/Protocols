@@ -79,6 +79,7 @@ class OT2_state_class():
             else :
                 self.mount('left')
 
+
 def run(ctx):
     import math
 
@@ -452,18 +453,7 @@ def run(ctx):
     def transfer(line):
         if detail_comment:
             ctx.comment ('Debug: Transfer started')
-        try:
-            _, s_slot, s_well, h, _, d_slot, d_well, vol, d_h, mix, touchtip, touchtip_d, rate_override, mixafter_override, distribute_override = line[:15]
-        except:
-            _, s_slot, s_well, h, _, d_slot, d_well, vol = line[:8]
-            d_h = '' 
-            mix = ''
-            touchtip = ''
-            touchtip_d = ''
-            rate_override = ''
-            mixafter_override = ''
-            distribute_override = ''
-            ctx.comment('CAUTION: Only required columns of input CSV file was read. No options were applied.')
+        _, s_slot, s_well, h, _, d_slot, d_well, vol, d_h, mix, touchtip, touchtip_d, rate_override, mixafter_override, distribute_override = line[:15]
         source = ctx.loaded_labwares[int(s_slot)].wells_by_name()[parse_well(s_well)]
         dest = ctx.loaded_labwares[int(d_slot)].wells_by_name()[parse_well(d_well)]
         if rate_override == '':
@@ -526,6 +516,9 @@ def run(ctx):
                 transfer_step(float(vol),source,dest,h,d_h,touchtip=touchtip.lower(),touchtip_d=touchtip_d,rate=rate_override)
         OT2_state.dest_history.append([d_slot,d_well])
         OT2_state.last_source = [s_slot,s_well]
+
+
+
 
     def distributable(line_cache):
         # volume evaluation
@@ -762,6 +755,8 @@ def run(ctx):
         ctx.comment('Debug: Line cache is initialized')
     ctx.set_rail_lights(light_map[light_on][1])
     for line in transfer_info:
+        for i in range (len(line),15):
+            line.append('')
         line_cache.append(line)
         if not distributable(line_cache):    # start distribute when it can not continue to this line. Otherwise continue for loop.
             if len(line_cache) == 1:
