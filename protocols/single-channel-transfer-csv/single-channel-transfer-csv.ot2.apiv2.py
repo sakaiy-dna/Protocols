@@ -488,7 +488,7 @@ def run(ctx):
                     pick_up()
             else :
                 pick_up()
-            OT2_state.pipette.mix(mix_cycle,mix_volume,source.bottom(float(h)),float(OT2_state.pipette_rate),rate=rate_override)
+            OT2_state.pipette.mix(mix_cycle,mix_volume,source.bottom(float(h)),rate=float(rate_override))
             if not OT2_state.step_delay == 0:
                 ctx.delay(seconds=float(OT2_state.step_delay))
             for i in range (int(OT2_state.blowout_cycle)) : 
@@ -537,7 +537,7 @@ def run(ctx):
         # source_test
         source_test = line_cache[len(line_cache)-1][1:2] == line_cache[0][1:2]
         # destination_test
-        destination_test = (not line_cache[len(line_cache)-1][5:6] in OT2_state.dest_history and OT2_state.store_dest_history) or (line_cache[len(line_cache)-1][7] > OT2_state.blowout_above and not (line_cache[len(line_cache)-1][10].lower() == 'dest' or line_cache[len(line_cache)-1][10].lower() == 'both' or line_cache[len(line_cache)-1][10].lower() == 'destination') and (line_cache[len(line_cache)-1][13] == '' or line_cache[len(line_cache)-1][13] == 0))
+        destination_test = (not line_cache[len(line_cache)-1][5:6] in OT2_state.dest_history and OT2_state.store_dest_history) or (line_cache[len(line_cache)-1][7] > OT2_state.blowout_above and not (line_cache[len(line_cache)-1][10].lower() == 'dest' or line_cache[len(line_cache)-1][10].lower() == 'both' or line_cache[len(line_cache)-1][10].lower() == 'destination') and (line_cache[len(line_cache)-1][14] == '' or line_cache[len(line_cache)-1][14] == 0))
         # mix before test
         mix_test = line_cache[len(line_cache)-1][9] == '' or len(line_cache) == 1
         # touch_tip_source test
@@ -546,8 +546,8 @@ def run(ctx):
             if line[10].lower() == 'source' or line[10].lower() == 'both':
                 touch_tip_times += 1
         touch_consistency = touch_tip_times == 0 or touch_tip_times == len(line_cache)
-        options_consistency = [line_cache[0][3]] + line_cache[0][11:13] == [line_cache[len(line_cache)-1][3]] + line_cache[len(line_cache)-1][11:13]
-        if line_cache[len(line_cache)-1][13] == '':
+        options_consistency = [line_cache[0][3]] + line_cache[0][11:14] == [line_cache[len(line_cache)-1][3]] + line_cache[len(line_cache)-1][11:14]
+        if line_cache[len(line_cache)-1][14] == '':
             if pipette_capacity and source_test and destination_test and not(mix_test and touch_consistency and options_consistency):
                 ctx.comment('CAUTION: Automatic distribute is adopted and inconsitent optional parameters among distribution set were detected (source mix, touch tip in source, pipette rate override, or asspiration height). Safest parameters were adopted.')
             return pipette_capacity and source_test and destination_test and volume_threshold
@@ -559,7 +559,6 @@ def run(ctx):
                 OT2_state.pipette.drop_tip()    # safety catch for avove comment exception.
                 OT2_state.pipette.drop_tip()
             ctx.comment('WARNING: Distribute Override was forced by CSV file and cross-contamination may happen.')
-
             return pipette_capacity
     
     def distribute(line_cache):
