@@ -347,7 +347,6 @@ def run(ctx):
             OT2_state.used_rack_dict[hand] = False  # Secound round ignores last-tip fork for used rack.
             if detail_comment:
                 ctx.comment('Debug: ' + hand + ' first tiprack, from which normally tips are picked up in backward, is empty.')
-
     def transfer_step(vol,source,dest,source_height,dest_height,*,mix_after=None,touchtip='',touchtip_d=5,dest_filled=True,rate=1) :
         # carryover assignment. dest_filled specify if tip will be replaced during carryover.
         transfer_volume = [float(vol)]
@@ -379,7 +378,7 @@ def run(ctx):
             for num in range(transfer_cycle - 1):
                 transfer_volume.append(transfer_unit_vol)
             if detail_comment:
-                ctx.comment('Debug: Carryover happend to transfer ' + str(vol) + ' µL. The transfer volume is split into ' + str(transfer_volume) + '.')
+                ctx.comment('Debug: Carryover is needed to transfer ' + str(vol) + ' µL. The transfer volume is split into ' + str(transfer_volume) + '.')
         # transfering step
         for unit_vol in transfer_volume:
             if not OT2_state.pipette.has_tip:
@@ -396,7 +395,7 @@ def run(ctx):
                 if dest_filled:
                     OT2_state.tip_dirty = True
                     if detail_comment:
-                        ctx.comment('Debug: Tip is dipped into destination well.')
+                        ctx.comment('Debug: Tip is dipped into destination well and flagged dirty')
                 if (dest_filled or not mix_after == None) and not pipetting_cycle == 0:
                     OT2_state.pipette.mix(pipetting_cycle,min(unit_vol,OT2_state.max),dest.bottom(mix_height),rate=float(rate))
             if not OT2_state.step_delay == 0:
@@ -408,10 +407,10 @@ def run(ctx):
                 if dest_filled:
                     OT2_state.tip_dirty = True
                     if detail_comment:
-                        ctx.comment('Debug: Tip touched the wall of destination well.')
+                        ctx.comment('Debug: Tip touched the wall of destination well and flagged dirty.')
             if transfer_cycle > 1 and OT2_state.tip_dirty and not OT2_state.tip_reuse == 'never':  # replace tip if carryover occur and tip might be dirty
                 if detail_comment:
-                    ctx.comment('Debug: Tip is replaced during a set of carryover process everytime the since tip might be contaminated.')
+                    ctx.comment('Debug: Tip is replaced during a set of carryover process everytime since the tip might be contaminated in destination.')
                 OT2_state.pipette.drop_tip()
                 OT2_state.tip_dirty = False
 
@@ -424,11 +423,7 @@ def run(ctx):
                 if OT2_state.last_pipette.has_tip and bool(OT2_state.drop_dirtytip) and not OT2_state.tip_reuse == 'never':
                     OT2_state.last_pipette.drop_tip()
                     if detail_comment:
-                        ctx.comment('Debug: Dirty tip on ' + OT2_state.last_mount + ' pipette is dropped into trash.')
-            if not OT2_state.last_source == [s_slot,s_well]:
-                OT2_state.tip_dirty = True
-                if detail_comment:
-                    ctx.comment('Debug: Tip is replaced before next step as the source well changed. Last source: ' + str(OT2_state.last_source) + ' while new source: ' + str([s_slot,s_well]))
+                        ctx.comment('Debug: Dirty tip on the other pipette (' + OT2_state.last_mount + ') is dropped into trash to avoid contamination of deck.')
         if OT2_state.pipette.has_tip:
             if force_once and not OT2_state.swap:
                 if detail_comment:
@@ -436,13 +431,19 @@ def run(ctx):
             elif OT2_state.tip_reuse == 'always' :
                 OT2_state.pipette.drop_tip()
                 if detail_comment:
-                    ctx.comment('Debug: Tip is replaced before next step as tip_reuse rule is "always"')
+                    ctx.comment('Debug: Tip is replaced before next step as tip_reuse policy is specified as "always"')
                 pick_up()
                 OT2_state.tip_dirty = False
             elif OT2_state.tip_reuse == 'once' and OT2_state.tip_dirty:
                 OT2_state.pipette.drop_tip()
                 if detail_comment and OT2_state.last_source == [s_slot,s_well]:
-                    ctx.comment('Debug: Tip is replaced before next step as the tip might be contaminated.')
+                    ctx.comment('Debug: Tip is replaced before next step as the tip might be contaminated in destination.')
+                pick_up()
+                OT2_state.tip_dirty = False
+            elif not OT2_state.last_source == [s_slot,s_well]:
+                OT2_state.pipette.drop_tip()
+                if detail_comment:
+                    ctx.comment('Debug: Tip is replaced as the source well changed. Last source: ' + str(OT2_state.last_source) + ' while new source: ' + str([s_slot,s_well]))
                 pick_up()
                 OT2_state.tip_dirty = False
         else :
@@ -451,8 +452,6 @@ def run(ctx):
         OT2_state.last_source = [s_slot,s_well]
 
     def transfer(line):
-        if detail_comment:
-            ctx.comment ('Debug: Transfer started')
         _, s_slot, s_well, h, _, d_slot, d_well, vol, d_h, mix, touchtip, touchtip_d, rate_override, mixafter_override, distribute_override = line[:15]
         source = ctx.loaded_labwares[int(s_slot)].wells_by_name()[parse_well(s_well)]
         dest = ctx.loaded_labwares[int(d_slot)].wells_by_name()[parse_well(d_well)]
@@ -500,25 +499,22 @@ def run(ctx):
 
         if not [d_slot,d_well] in OT2_state.dest_history and bool(OT2_state.store_dest_history):         #If destination well is clean, destination pipetting is skipped.
             if detail_comment :
-                ctx.comment('Debug: The destnation of next transfer is empty. Destination pipetting is skipped unless specifically overridden by CSV file. Tip is assumed to be clean after use and not replaced if tip_reuse rule is "once".')
+                ctx.comment('Debug: The destnation of line ' +  str(OT2_state.line_num) + ' is empty. Destination pipetting is skipped unless specifically overridden by CSV file. Tip is assumed to be clean after use and not replaced if tip_reuse rule is "once".')
             if not mixafter_override == '' :           # in case of pipetting override applied.
                 if detail_comment :
-                    ctx.comment('Debug: Pipetting cycle is overridden by CSV specified number:' + str(mixafter_override))
+                    ctx.comment('Debug: Special pipetting cycle: ' + str(mixafter_override) + ' is applied in line ' + str(OT2_state.line_num))
                 transfer_step(float(vol),source,dest,h,d_h,touchtip=touchtip.lower(),touchtip_d=touchtip_d,dest_filled=False,rate=rate_override,mix_after=(int(mixafter_override)))
             else:
                 transfer_step(float(vol),source,dest,h,d_h,touchtip=touchtip.lower(),touchtip_d=touchtip_d,dest_filled=False,rate=rate_override)
         else:
             if not mixafter_override == '' :           # in case of pipetting override applied.
                 if detail_comment :
-                    ctx.comment('Debug: Pipetting cycle is overridden by CSV specified number:' + str(mixafter_override))
+                    ctx.comment('Debug: Special pipetting cycle: ' + str(mixafter_override) + ' is applied in line ' + str(OT2_state.line_num))
                 transfer_step(float(vol),source,dest,h,d_h,touchtip=touchtip.lower(),touchtip_d=touchtip_d,rate=rate_override,mix_after=(int(mixafter_override)))
             else:
                 transfer_step(float(vol),source,dest,h,d_h,touchtip=touchtip.lower(),touchtip_d=touchtip_d,rate=rate_override)
         OT2_state.dest_history.append([d_slot,d_well])
         OT2_state.last_source = [s_slot,s_well]
-
-
-
 
     def distributable(line_cache):
         # volume evaluation
@@ -562,8 +558,6 @@ def run(ctx):
             return pipette_capacity
     
     def distribute(line_cache):
-        if detail_comment:
-            ctx.comment ('Debug: Distribute started')
         source = ctx.loaded_labwares[int(line_cache[0][1])].wells_by_name()[parse_well(line_cache[0][2])]
         dest_list = []
         dispense_vol = []
@@ -591,7 +585,7 @@ def run(ctx):
             if mix == 0:
                 manual_mix = True
             elif not mix == '':
-                source_mix = max(mix,source_mix)
+                source_mix = max(float(mix),source_mix)
             if touchtip.lower() == 'source' or touchtip.lower() == 'both':
                 source_touchtip = True
                 if touchtip_d == '':
@@ -610,9 +604,9 @@ def run(ctx):
             mixafter_override_list.append(mixafter_override)
             if not distribute_override == '':
                 ctx.comment('CAUTION: Distribute Override was specified by CSV file.')
-            dest_filled_list.append([d_slot,d_well] in OT2_state.dest_history and not bool(OT2_state.store_dest_history))   # True stands or the dest is in history. False means empty dest.
-            if detail_comment and ([d_slot,d_well] in OT2_state.dest_history and not bool(OT2_state.store_dest_history)) :
-                ctx.comment('Debug: The destnation of next distribute is empty. Destination pipetting is skipped unless specifically overridden by CSV file. Tip is assumed to be clean after use and not replaced if tip_reuse rule is "once".')
+            dest_filled_list.append([d_slot,d_well] in OT2_state.dest_history and bool(OT2_state.store_dest_history))   # True stands or the dest is in history. False means empty dest.
+            if detail_comment and ([d_slot,d_well] in OT2_state.dest_history and bool(OT2_state.store_dest_history)) :
+                ctx.comment('Debug: The destnation of lines ' + str(OT2_state.line_num - len(line_cache) + 2) + '-' + str(OT2_state.line_num) + ' are all empty. Destination pipetting is skipped unless specifically overridden by CSV file. Tip is assumed to be clean after use and not replaced if tip_reuse rule is "once".')
             OT2_state.dest_history.append([d_slot,d_well])
         # source mixing phase
         mix_cycle = 10     # Default mixing cycle is 10.
@@ -646,6 +640,7 @@ def run(ctx):
             ctx.delay(seconds=float(OT2_state.step_delay))                                                                         # does it happen where tip dipped in or above?
         if source_touchtip:
             OT2_state.pipette.touch_tip(location=source,v_offset=(-1*int(touchtip_source_d)))
+        line_counter = 0
         for dest, vol, dest_h, touchtip_d, mixafter_override, dest_filled in zip(dest_list,dispense_vol,dest_h_list,touchtip_dest_d,mixafter_override_list,dest_filled_list):
             if not dest_h == '':
                 mix_after = True                        # to specify pipetting after transfer
@@ -656,12 +651,12 @@ def run(ctx):
                 dispense_height = min(3,max(1,2*(float(vol)/(4*math.pi)*3)**(1/3) - 1)) # spheric droplet diameter - 1 mm, but ranging between 1 mm - 3 mm.
                 mix_height = 1                                                          # Opentrons official default.
                 if detail_comment:
-                    ctx.comment('Debug: Unspecified destination height is set to ' + str(dispense_height) + ' mm from the bottom according to dispensing volume. (ignored when vol is above blowout_above.)')
+                    ctx.comment('Debug: Unspecified destination height is set to ' + str(round(dispense_height,2)) + ' mm from the bottom according to dispensing volume. (ignored when vol is above blowout_above.)')
             pipetting_cycle = OT2_state.mix_after_cycle
             if not mixafter_override == '':
                 pipetting_cycle = int(mixafter_override)
                 if OT2_state.detail_comment:
-                    ctx.comment('Debug: Pipetting cycle (including 0) at destination was overridden by CSV file input')
+                    ctx.comment('Debug: Special Pipetting cycle: ' + str(pipetting_cycle) + ' is applied in line ' + str(OT2_state.line_num + line_counter ))
             if pipetting_cycle == 0:
                 mix_after = False
             if vol >= OT2_state.blowout_above and not mix_after:                              # Dispense to destination well from above or at the bottom of the well.
@@ -670,6 +665,9 @@ def run(ctx):
                 OT2_state.pipette.dispense(volume=vol,location=dest.bottom(dispense_height),rate=float(rate_override_min))
                 if (not dest_filled) and (not mix_after == False):                                  # in case pipetting in empty well.
                     OT2_state.pipette.mix(pipetting_cycle,min(vol,OT2_state.max),dest.bottom(mix_height),rate=float(rate_override_min))
+                    ctx.comment('Debug: not dest_filled:' + str( not dest_filled ))
+                    ctx.comment('Debug: not mix_after == False:' + str(not mix_after == False))
+                    ctx.comment('Debug: dest_filled_list:' + str(dest_filled_list) )
                 else:
                     if dest_filled:
                         OT2_state.tip_dirty = True
@@ -687,6 +685,7 @@ def run(ctx):
                     if OT2_state.safety_catch and not OT2_state.tip_reuse == 'never':
                             OT2_state.pipette.drop_tip()    # safety catch for avove comment exception.
                             OT2_state.pipette.drop_tip()
+            line_counter += 1
         if return_source and (not OT2_state.tip_dirty or tip_reuse == 'never'):
             OT2_state.pipette.dispense(volume=OT2_state.min,location=source.top(-5),rate=float(rate_override_min))
             if not OT2_state.step_delay == 0:
@@ -750,26 +749,41 @@ def run(ctx):
     # Main transfer phase
     ctx.comment('Main transfer phase has started. OT-2 is transfering ' + str(len(transfer_info)) + ' lines.')
     line_cache = []
+    OT2_state.line_num = -1 # count up from -1 as the first for loop is virtually skipped to store cache.
     if detail_comment:
         ctx.comment('Debug: Line cache is initialized')
     ctx.set_rail_lights(light_map[light_on][1])
     for line in transfer_info:
+        OT2_state.line_num += 1
+        if len(line) < 15 and detail_comment:
+            ctx.comment('line ' + OT2_state.line_num + ' lacks optional columns and filled by blanks.')
         for i in range (len(line),15):
             line.append('')
         line_cache.append(line)
         if not distributable(line_cache):    # start distribute when it can not continue to this line. Otherwise continue for loop.
             if len(line_cache) == 1:
+                if detail_comment:
+                    ctx.comment ('Debug: Now transfering line ' + str(OT2_state.line_num))
                 transfer(line_cache[0])
             elif len(line_cache) == 2:
+                if detail_comment:
+                    ctx.comment ('Debug: Now transfering line ' + str(OT2_state.line_num))
                 transfer(line_cache[0])
                 line_cache = [line_cache[len(line_cache)-1]]
             else:
+                if detail_comment:
+                    ctx.comment ('Debug: Now distributing lines ' + str(OT2_state.line_num - len(line_cache) + 2)  + '-' + str(OT2_state.line_num))
                 distribute(line_cache)
                 line_cache = [line_cache[len(line_cache)-1]]
     if len(line_cache) == 1:
+        if detail_comment:
+            ctx.comment ('Debug: Now transfering the last line ' + str(OT2_state.line_num))
         transfer(line_cache[0])
     else:
         line_cache.append([])
+        OT2_state.line_num += 1
+        if detail_comment:
+            ctx.comment ('Debug: Now distributing the last lines ' + str(OT2_state.line_num - len(line_cache) + 2)  + '-' + str(OT2_state.line_num))
         distribute(line_cache)
 
     for hand in OT2_state.name_dict.keys():
