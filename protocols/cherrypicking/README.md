@@ -1,17 +1,14 @@
-# Cherrypicking
+# Versatile Single Channel Transfer From CSV
 
 ### Author
 Yusuke Sakai
 
 ## Categories
-* Featured
-	* Cherrypicking
 
 ## Description
 
-Thoroughly customizable liquid handling protocol is derived from Official Cherrypicking protocol. Two different single channel pipettes can be installed to handle liquid according to CSV input, including mixing source before transfer, pipetting in destination, distributing to multiple destination at once, etc. It accepts one used tiprack per pipette, makes your life easier. CSV file will specify labware, slot, well by name of source and destination, height-from-bottom to aspirate, and transfering volume. Optionally, the user can add source mixing step with specified volume (or pause for manual vortexing), which allows the user to arrange a cascade mixing protocol in a single run. For viscous samples, pipetting in destination for user-specified cycle at the user-specified position from bottom, touch-tip at either or both source and destination, pipette rate control are supported to tune globally (parameter) or sample specifically (CSV file override).
-
-![Cherrypicking Example](https://opentrons-protocol-library-website.s3.amazonaws.com/custom-README-images/cherrypicking/cherrypicking_example.png)
+Thoroughly customizable liquid handling protocol is derived from official Cherrypicking protocol[https://protocols.opentrons.com/protocol/cherrypicking]. Two different single channel pipettes can be installed to handle liquid according to a CSV input, including source mixing step before transfer, pipetting in destination, distributing to multiple destinations at once, etc. It accepts one used tiprack per pipette, makes your life easier. CSV file will specify labware, slot, well by name of source and destination, height-from-bottom to aspirate, and transfering volume. Optionally, the user can add source mixing step with specified volume (or pause the robot for manual vortexing), which allows the user to arrange a cascade mixing protocol (such as premix preparation for accurate biochemical assay) in a single run. For viscous samples, pipetting in destination for user-specified cycles at the user-specified position from bottom, touch-tip at either or both source and destination, overall pipette rate control are supported to tune globally (parameter) or sample specifically (CSV file override).
+<img width="1935" alt="Scheme_fig" src="https://user-images.githubusercontent.com/70700401/132171714-a0e5b923-e4cc-4e80-b25d-e5051c891aa1.png">
 
 Explanation of complex parameters below:  
 **Required parameters:**  
