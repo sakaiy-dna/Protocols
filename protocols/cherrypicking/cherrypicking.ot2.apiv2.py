@@ -1,7 +1,7 @@
 metadata = {
     'protocolName': 'Extended Cherrypicking',
     'author': 'Yusuke Sakai <yusuke.sakai@riken.jp>',
-    'source': 'Custom protocol, modified from Opentrons Cherrypicking',
+    'source': 'Modified from Opentrons Cherrypicking',
     'apiLevel': '2.10'
 }
 
@@ -87,76 +87,75 @@ def run(ctx):
     parameters = ["left_pipette_type", "right_pipette_type", "tip_type", "tip_reuse", "right_tipracks_start", "left_tip_last_well", "right_tip_last_well", "mode", "initial_verification", "blowout_above", "distribute_above","blowout_cycle", "max_carryover", "light_on", "mix_after_cycle", "drop_dirtytip", "mix_cycle_limit", "store_dest_history", "pipette_rate","step_delay","return_source","mix_same_tip"]
 
     mode_map = {
-        'safe_mode':{
-            'tip_reuse':'always',
-            'initial_verification':True,
-            'blowout_above':1001,       # Always make pipetting in destination well.
-            'blowout_cycle':3,          # Three times of blowing out is always performed.
-            'max_carryover':5,          # Carryover cycle is limited by this value.
-            'mix_after_cycle':2,        # Pipetting cycle after dispensing to make sure all tip content is transfered to the destination.
-            'drop_dirtytip':True,       # If drop tip on inactive pipette when the otehr pipette is in use. 
-            'mix_cycle_limit':100,      # Mix cycle is autoomatically adjusted when specified value is above pipette max limit. Specify the maximum number.
-            'distribute_above':1000,    # The protocol start distribute function when the line has volume above this value (µL).
-            'return_source':False,      # Distribute won't occur as the threshold above but here NOT return source after distibute is specified. Minimum of volume used pipette will be discarded.
-            'store_dest_history':True,  # Assume tip is not contaminated yet when the destination is not specified as destination as of transfer.
-            'step_delay':1,             # robot will pause for specified seconds after aspiration and before blowout for viscous reagent.
-            'pipette_rate':1,
-            'mix_same_tip':True,
-            'light_on':'always_off'
+        'safe_mode':{                       # slow setting with certain margin, though handling viscous samples would need more tuning.
+            'tip_reuse':'always',           # Tip will be replaced every tranfering step.
+            'initial_verification':True,    # Initial verification is active to minimize human error.
+            'blowout_above':1001,           # Always make pipetting in destination well.
+            'blowout_cycle':3,              # Three times of blowing out is always performed.
+            'max_carryover':5,              # Carryover cycle is limited up to 5 time. (e.g. if you installed P300 pipette, transfering above 1500 µL returns error.)
+            'mix_after_cycle':2,            # Twice of pipetting after dispensing to make sure all tip content is transfered to the destination. (usually skipped when transfering to empty destination)
+            'drop_dirtytip':True,           # Drop tip on the unused pipette when the otehr pipette is in use. 
+            'mix_cycle_limit':100,          # Mix cycle is automatically adjusted when specified value is above pipette capacity (up to 10 times, e.g. you can specify up to 3 mL when you isntall P300).
+            'distribute_above':1000,        # Distribute is inactivated as the threshold is more than the half of the capacity of any of available pipette.
+            'return_source':False,          # Distribute won't occur as the threshold above but here NOT to return source after distibute is specified. Minimum of volume of the used pipette will be discarded.
+            'store_dest_history':True,      # Assume tip is not contaminated yet when the destination has not been specified as a destination as of the transfer.
+            'step_delay':1,                 # Robot will pause for a second after aspiration and before blowout for content to be still.
+            'pipette_rate':1,               # Relative pipette rate. 1 is default and the max. Keep in mind it may differ between version and API level.
+            'mix_same_tip':False,           # Tip will be replaced between source mixing step and transfering step for best accuracy.
+            'light_on':'always_off'         # Light is alway turned off for preserving light sensitive sample.
         },
-        'simple_mode':{
-            'tip_reuse':'once',      # tip will be replaced only when the tip might be contaminated.
+        'simple_mode':{                     # Moderate setting with balanced resorce (time and tip) consumption.
+            'tip_reuse':'once',             # tip will be replaced only when the tip might be contaminated.
             'initial_verification':True,
-            'blowout_above':50,      # Transfering less than 50 µL will be performed with a pipetting in destination well
-            'blowout_cycle':2,
+            'blowout_above':50,             # Transfering less than 50 µL will be performed with a pipetting in destination well
+            'blowout_cycle':2,              # Twice of blowing out is always performed. (enough for most case)
             'max_carryover':5,
-            'mix_after_cycle':1,
+            'mix_after_cycle':1,            # Once of pipetting after dispensing to make sure all tip content is transfered to the destination. (usually skipped when transfering to empty destination)
             'drop_dirtytip':True,
-            'mix_cycle_limit':30,
+            'mix_cycle_limit':30,           # Mixing volume up to three times of larger pipette capacity can be specified.
             'distribute_above':1000,
-            'return_source':True,
+            'return_source':True,           # Distribute won't occur as the threshold above but here to return source after distibute is specified.
             'store_dest_history':True,
-            'mix_same_tip':True,
-            'step_delay':0,
+            'mix_same_tip':True,            # Keep using the same tip for source mixing step and transfering step if possible.
+            'step_delay':0,                 # No step delay is applied.
             'pipette_rate':1,
-            'light_on':'run_off'
+            'light_on':'run_off'            # Light is turned on during potentially manual steps (initial verification, during pause and after the run) and turned off during fully automatic phase.
         },
-        'rapid_mode':{
+        'rapid_mode':{                      # Faster setting with shorter margin. For not accuracy-demanidng nor viscous samples.
             'tip_reuse':'once',
-            'initial_verification':False,
-            'blowout_above':20,      # Transfering less than 20 µL will be performed with a pipetting in destination well
+            'initial_verification':False,   # Initial verification is skipped and there are no chance of double check.
+            'blowout_above':20,             # Transfering 20 µL or more than 20 µL will be blown out above the destination (from 5 mm inside from the top of the well).
             'blowout_cycle':2,
             'max_carryover':5,
-            'mix_after_cycle':1,
+            'mix_after_cycle':0,            # No pipetting (just dispence in the bottom of destination) when lower than blowout_above
             'drop_dirtytip':False,
-            'mix_cycle_limit':10,
-            'distribute_above':100,
-            'return_source':True,
+            'mix_cycle_limit':10,           # Specifying mixing volume larger than pipette capacity returns error.
+            'distribute_above':100,         # Distribute is activated when the transfering volume of each destination is above 100 µL
+            'return_source':True,           # Returning disposal volume (min volume of the pipette) to source after distibute is specified.
             'store_dest_history':True,
             'step_delay':0,
             'pipette_rate':1,
             'mix_same_tip':True,
             'light_on':'run_off'
         },
-        'test_mode':{
-            'tip_reuse':'never',
+        'test_mode':{                       # To test labware clearance and protocol correctness in dry with shortest time. Tip will be returend to tipracks after run.
+            'tip_reuse':'never',            # Tip will never replaced during run.
             'initial_verification':True,
-            'blowout_cycle':1,
-            'max_carryover':0,
-            'mix_after_cycle':0,
-            'drop_dirtytip':False,
-            'mix_cycle_limit':0,
+            'blowout_cycle':1,              # Blowout cycle is minimum (Opentrons default).
+            'mix_after_cycle':1,            # once of destination pipetting will be performed when the transfer volme is below blow out above threshold.
+            'drop_dirtytip':False,          # Both pipette may have tips even during the other one is in use.
+            'mix_cycle_limit':0,            # Specifying mixing volume retunrs error.
             'store_dest_history':True,
-            'safety_catch':False,
-            'detail_comment':True,
+            'safety_catch':False,           # Safety catches are released. Passing simulation doesn't certify the validity of the procol.
+            'detail_comment':True,          # Detail comment is 
             'step_delay':0,
             'pipette_rate':1,
             'mix_same_tip':True,
-            'light_on':'always_on'
+            'light_on':'always_on'          # Light is alway turned on thoughout the protocol.
         },
         'custom_mode':{
         },
-        'debug_mode':{                   # This mode remove safety lines (script lines to return error during simulation phase) allows user to read detail comments to find error.
+        'debug_mode':{                      # This mode remove safety lines (script lines to return error during simulation phase) allows user to read detail comments to find error.
         'safety_catch':False,
         'detail_comment':True
         }
@@ -719,6 +718,8 @@ def run(ctx):
 
     OT2_state = OT2_state_class(parameter_dict)
     OT2_state.tip_last_dict = {'left':converter96well_invert(parse_well(left_tip_last_well)),'right':converter96well_invert(parse_well(right_tip_last_well))}
+    if OT2_state.safety_catch == False:
+        ctx.comment('WARNING: Safety catch is inactivated. Passing simulation does not certify the protocol is valid.')
 
     # load tipracks to remaining empty slots. Used tack of each pipette is installed to slot with youngest number. Pipettes are installed.
     if not right_tipracks_start == 1 and not left_pipette_type == '':
