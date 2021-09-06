@@ -1,7 +1,7 @@
 metadata = {
     'protocolName': 'Extended Cherrypicking',
     'author': 'Yusuke Sakai <yusuke.sakai@riken.jp>',
-    'source': 'Modified from Opentrons Cherrypicking',
+    'source': 'Custom protocol, modified from Opentrons Cherrypicking',
     'apiLevel': '2.10'
 }
 
@@ -403,7 +403,7 @@ def run(ctx):
                 ctx.delay(seconds=float(OT2_state.step_delay))
             for i in range (int(OT2_state.blowout_cycle)) :
                 OT2_state.pipette.blow_out(location=dest.top(-5))    #Blow out user specified times (default = 2), as official blow_out setting is too weak. Blow out is executed every transfering movement including carryover to avoid accumulating remainig liquid.
-            if touchtip == 'both' or touchtip == 'dest':
+            if touchtip == 'both' or touchtip == 'dest' or touchtip == 'destination':
                 OT2_state.pipette.touch_tip(location=dest,v_offset=(-1*int(touchtip_d)))
                 if dest_filled:
                     OT2_state.tip_dirty = True
@@ -545,7 +545,7 @@ def run(ctx):
         # source_test
         source_test = line_cache[len(line_cache)-1][1:2] == line_cache[0][1:2]
         # destination_test
-        destination_test = (not line_cache[len(line_cache)-1][5:6] in OT2_state.dest_history and OT2_state.store_dest_history) or (line_cache[len(line_cache)-1][7] > OT2_state.blowout_above and not (line_cache[len(line_cache)-1][10].lower() == 'dest' or line_cache[len(line_cache)-1][10].lower() == 'both') and (line_cache[len(line_cache)-1][13] == '' or line_cache[len(line_cache)-1][13] == 0))
+        destination_test = (not line_cache[len(line_cache)-1][5:6] in OT2_state.dest_history and OT2_state.store_dest_history) or (line_cache[len(line_cache)-1][7] > OT2_state.blowout_above and not (line_cache[len(line_cache)-1][10].lower() == 'dest' or line_cache[len(line_cache)-1][10].lower() == 'both' or line_cache[len(line_cache)-1][10].lower() == 'destination') and (line_cache[len(line_cache)-1][13] == '' or line_cache[len(line_cache)-1][13] == 0))
         # mix before test
         mix_test = line_cache[len(line_cache)-1][9] == '' or len(line_cache) == 1
         # touch_tip_source test
@@ -607,7 +607,7 @@ def run(ctx):
                     touchtip_source_d = max(5,touchtip_source_d)
                 else:
                     touchtip_source_d = float(touchtip_d)
-            if touchtip.lower() == 'dest' or touchtip.lower() == 'both':
+            if touchtip.lower() == 'dest' or touchtip.lower() == 'both' or touchtip.lower() == 'destination':
                 if touchtip_d == '':
                     touchtip_dest_d.append(5)
                 else:
