@@ -387,7 +387,7 @@ def run(ctx):
             OT2_state.pipette.aspirate(volume=unit_vol,location=source.bottom(float(source_height)),rate=float(rate))
             if not OT2_state.step_delay == 0:
                 ctx.delay(seconds=float(OT2_state.step_delay))                                                                         # does it happen where tip dipped in or above?
-            if touchtip == 'both' or touchtip == 'before':
+            if touchtip == 'both' or touchtip == 'source':
                 OT2_state.pipette.touch_tip(location=source,v_offset=(-1*int(touchtip_d)))
             if unit_vol >= OT2_state.blowout_above and mix_after == None:                               # Dispense to destination well from above or at the bottom of the well.
                 OT2_state.pipette.dispense(volume=unit_vol,location=dest.top(-5),rate=float(rate))
@@ -403,7 +403,7 @@ def run(ctx):
                 ctx.delay(seconds=float(OT2_state.step_delay))
             for i in range (int(OT2_state.blowout_cycle)) :
                 OT2_state.pipette.blow_out(location=dest.top(-5))    #Blow out user specified times (default = 2), as official blow_out setting is too weak. Blow out is executed every transfering movement including carryover to avoid accumulating remainig liquid.
-            if touchtip == 'both' or touchtip == 'after':
+            if touchtip == 'both' or touchtip == 'dest':
                 OT2_state.pipette.touch_tip(location=dest,v_offset=(-1*int(touchtip_d)))
                 if dest_filled:
                     OT2_state.tip_dirty = True
@@ -545,13 +545,13 @@ def run(ctx):
         # source_test
         source_test = line_cache[len(line_cache)-1][1:2] == line_cache[0][1:2]
         # destination_test
-        destination_test = (not line_cache[len(line_cache)-1][5:6] in OT2_state.dest_history and OT2_state.store_dest_history) or (line_cache[len(line_cache)-1][7] > OT2_state.blowout_above and not (line_cache[len(line_cache)-1][10].lower() == 'after' or line_cache[len(line_cache)-1][10].lower() == 'both') and (line_cache[len(line_cache)-1][13] == '' or line_cache[len(line_cache)-1][13] == 0))
+        destination_test = (not line_cache[len(line_cache)-1][5:6] in OT2_state.dest_history and OT2_state.store_dest_history) or (line_cache[len(line_cache)-1][7] > OT2_state.blowout_above and not (line_cache[len(line_cache)-1][10].lower() == 'dest' or line_cache[len(line_cache)-1][10].lower() == 'both') and (line_cache[len(line_cache)-1][13] == '' or line_cache[len(line_cache)-1][13] == 0))
         # mix before test
         mix_test = line_cache[len(line_cache)-1][9] == '' or len(line_cache) == 1
         # touch_tip_source test
         touch_tip_times = 0
         for line in line_cache:
-            if line[10].lower() == 'before' or line[10].lower() == 'both':
+            if line[10].lower() == 'source' or line[10].lower() == 'both':
                 touch_tip_times += 1
         touch_consistency = touch_tip_times == 0 or touch_tip_times == len(line_cache)
         options_consistency = [line_cache[0][3]] + line_cache[0][11:13] == [line_cache[len(line_cache)-1][3]] + line_cache[len(line_cache)-1][11:13]
@@ -601,13 +601,13 @@ def run(ctx):
                 manual_mix = True
             elif not mix == '':
                 source_mix = max(mix,source_mix)
-            if touchtip.lower() == 'before' or touchtip.lower() == 'both':
+            if touchtip.lower() == 'source' or touchtip.lower() == 'both':
                 source_touchtip = True
                 if touchtip_d == '':
                     touchtip_source_d = max(5,touchtip_source_d)
                 else:
                     touchtip_source_d = float(touchtip_d)
-            if touchtip.lower() == 'after' or touchtip.lower() == 'both':
+            if touchtip.lower() == 'dest' or touchtip.lower() == 'both':
                 if touchtip_d == '':
                     touchtip_dest_d.append(5)
                 else:
