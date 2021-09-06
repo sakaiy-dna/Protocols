@@ -1,4 +1,3 @@
-<img width="1982" alt="scheme" src="https://user-images.githubusercontent.com/70700401/132176109-d59d088c-3d52-495a-bdc3-711164bd57c0.png">
 # Versatile Single Channel Transfer From CSV
 
 ### Author
