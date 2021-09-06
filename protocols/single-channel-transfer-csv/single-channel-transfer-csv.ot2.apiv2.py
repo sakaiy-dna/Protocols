@@ -1,5 +1,5 @@
 metadata = {
-    'protocolName': 'Extended Cherrypicking',
+    'protocolName': 'Single Channel Transfer from CSV',
     'author': 'Yusuke Sakai <yusuke.sakai@riken.jp>',
     'source': 'Modified from Opentrons Cherrypicking',
     'apiLevel': '2.10'
