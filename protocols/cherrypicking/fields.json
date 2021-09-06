@@ -58,7 +58,7 @@
   },
   {
     "type": "str",
-    "label": "Right Tip Well (Right)",
+    "label": "Last Tip Well (Right)",
     "name": "right_tip_last_well",
     "default": "H12"
   },
@@ -80,8 +80,8 @@
     "label": "Initial verification of tipracks to minimize human error.",
     "name": "initial_verification",
     "options": [
-      {"label": "Yes", "value": "True"},
-      {"label": "No", "value": "False"}
+      {"label": "Active", "value": "True"},
+      {"label": "Disabled", "value": "False"}
     ]
   },
   {
@@ -92,15 +92,6 @@
       {"label": "Reuse tip until the tip touches other than source", "value": "once"},
       {"label": "Use a new tip for each transfer", "value": "always"},
       {"label": "Reuse tip for each transfer", "value": "never"}
-    ]
-  },
-  {
-    "type": "dropDown",
-    "label": "Tip Type",
-    "name": "initial_verification",
-    "options": [
-      {"label": "Standard", "value": "standard"},
-      {"label": "Filter", "value": "filter"}
     ]
   },
   {
@@ -119,14 +110,8 @@
   {
     "type": "int",
     "label": "Blow Out Cycle",
-    "name": "blowout_threshold",
-    "default": 50
-  },
-  {
-    "type": "int",
-    "label": "Step Delay (in sec)",
-    "name": "blowout_threshold",
-    "default": 0
+    "name": "blowout_cycle",
+    "default": 2
   },
   {
     "type": "int",
@@ -157,8 +142,8 @@
     "label": "Return Distribute Disposal To Source",
     "name": "return_source",
     "options": [
-      {"label": "Yes", "value": "True"},
-      {"label": "No", "value": "False"}
+      {"label": "Retrun to Source", "value": "True"},
+      {"label": "Discard", "value": "False"}
     ]
   },
   {
@@ -171,7 +156,7 @@
     "type": "ini",
     "label": "Maximum Mix Cycles",
     "name": "mix_cycle_limit",
-    "default": 30
+    "default": 100
   },
   {
     "type": "dropDown",
@@ -194,7 +179,7 @@
   {
     "type": "dropDown",
     "label": "Destination History",
-    "name": "drop_dirtytip",
+    "name": "dest_history",
     "options": [
       {"label": "Active", "value": "True"},
       {"label": "Disabled", "value": "False"}
