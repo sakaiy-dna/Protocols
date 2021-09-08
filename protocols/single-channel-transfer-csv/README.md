@@ -60,7 +60,7 @@ Thoroughly customizable single channel transfer protocol is derived from officia
 
 ### Deck Setup
 * Example deck setup - Source and destination labwares are assined automatically according to CSV file. The tipracks for left pipette fills remaining slot from youngest slot number. The tipracks for right pipette is loaded from manually specified slot.
-![example layout](https://user-images.githubusercontent.com/70700401/132173457-15fc4894-be7e-4ae5-b781-a8756dae6cbb.png)
+![example layout](https://user-images.githubusercontent.com/70700401/132437602-54c1fd54-0569-4a73-9648-69033d35f890.png)
 
 ---
 
