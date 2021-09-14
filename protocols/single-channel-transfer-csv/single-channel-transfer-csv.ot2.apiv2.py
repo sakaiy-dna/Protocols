@@ -322,12 +322,12 @@ def run(ctx):
             ctx.pause('Please refill tipracks for the ' + hand + ' pipette before resuming.')
             if bool(initial_verification) :
                 ctx.set_rail_lights(light_map[light_on][0])
-                OT2_state.pipette.pick_up_tip(OT2_state.first_tiprack_dict[hand][0]['A1'])
-                if detail_comment:
-                    ctx.comment('Tiprack verification step: The ' + hand + ' pipette will pick up a tip from the first tiprack.')
-                OT2_state.pipette.return_tip()
+                for hand in OT2_state.name_dict.keys():
+                    OT2_state.pipette_dict[hand].pick_up_tip(OT2_state.first_tiprack_dict[hand][0][parse_well(tip_last_well[hand])])
+                    OT2_state.pipette_dict[hand].return_tip()
+                ctx.delay(seconds=3)
+                ctx.comment('Tiprack verification: Pause manually if pipette(s) did not pick up A1 of the first tiprack(s).')
                 ctx.set_rail_lights(light_map[light_on][2])
-                ctx.pause('Resume OT-2 once you confirm the first tip(s) are picked up from the first tiprack(s) by individual pipette(s)')
             OT2_state.pipette.reset_tipracks()
             OT2_state.tip_count_dict[hand] = 1
             OT2_state.pipette.pick_up_tip()
@@ -461,7 +461,8 @@ def run(ctx):
         mix_cycle = 10     # Default mixing cycle is 10.
         if mix == '0' :  #In case of 0, pause and user mixes the source manually.
             ctx.set_rail_lights(light_map[light_on][2])
-            ctx.pause('Please mix destination labwares manually, spin them down, and resume the robot. The destination paused the robot is:' + s_well + ' in ' + str(s_slot) + '.')
+            OT2_state.pipette.home()
+            ctx.pause('Please mix destination labwares manually, spin them down, and resume the robot. The destination paused the robot is:' + s_well.upper() + ' in ' + str(s_slot) + '.')
             ctx.set_rail_lights(light_map[light_on][1])
         elif not mix == '' :
             select_pipette(float(mix),s_slot,s_well)
@@ -615,7 +616,8 @@ def run(ctx):
         mix_cycle = 10     # Default mixing cycle is 10.
         if manual_mix :  #Pause and user mixes the source manually.
             ctx.set_rail_lights(light_map[light_on][2])
-            ctx.pause('Please mix destination labwares manually, spin them down, and resume the robot. The destination paused the robot is:' + s_well + ' in ' + str(s_slot) + '.')
+            OT2_state.pipette.home()
+            ctx.pause('Please mix destination labwares manually, spin them down, and resume the robot. The destination paused the robot is:' + s_well.upper() + ' in ' + str(s_slot) + '.')
             ctx.set_rail_lights(light_map[light_on][1])
         elif not source_mix == 0 :
             select_pipette(source_mix,s_slot,s_well)
