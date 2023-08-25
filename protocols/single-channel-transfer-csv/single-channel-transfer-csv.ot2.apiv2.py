@@ -7,24 +7,24 @@ metadata = {
 
 class OT2_state_class():
     def __init__(self,parameters):
-        self.name_dict = {}
+        self.name_dict = {}    #API covers 
         self.current_mount = ''
         self.last_mount = ''
-        self.tipracks_dict = {'left':[],'right':[]}
+        self.tipracks_dict = {'left':[],'right':[]}    #API covers
         self.tip_count_dict = {'left':0,'right':0}
         self.tip_last_dict = {}
         self.used_rack_dict = {'left':True,'right':True}
         self.tip_max_dict = {}
-        self.first_tiprack_dict = {}
-        self.max_dict = {}
-        self.min_dict = {}
-        self.pipette_dict = {}
-        self.pipette = None
+        self.first_tiprack_dict = {}    #API covers
+        self.max_dict = {}    #API covers
+        self.min_dict = {}    #API covers
+        self.pipette_dict = {}    #API covers
+        self.pipette = None    #API covers
         self.last_source_dict = {'left':[],'right':[]}
         self.last_source = []
         self.tip_dirty_dict = {'left':[False],'right':[False]}
         self.tip_dirty = False
-        self.dest_history = []
+        self.dest_history = []    #API covers
         for k, v in parameters.items():
             setattr(self, k, v)
 
